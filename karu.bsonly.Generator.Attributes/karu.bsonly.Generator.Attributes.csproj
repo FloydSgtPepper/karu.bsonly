@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 👇 Source generators must target netstandard 2.0 -->
+    <TargetFramework>netstandard2.0</TargetFramework> 
+  </PropertyGroup>
+
+</Project>

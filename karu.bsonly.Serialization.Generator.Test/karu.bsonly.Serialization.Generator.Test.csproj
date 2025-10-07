@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <GeneratedFolder>_generated</GeneratedFolder>
+    <CompilerGeneratedFilesOutputPath>$(GeneratedFolder)\$(TargetFramework)</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+  <!--<ItemGroup>
+    <Folder Include="_generated\" />
+  </ItemGroup> -->
+
+<ItemGroup>
+    <!-- 👇 Exclude everything in the base folder -->
+    <Compile Remove="$(GeneratedFolder)/**/*.cs" />
+</ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="MSTest" Version="4.0.0-preview.25465.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\karu.bsonly.Serialization\karu.bsonly.Serialization.csproj" />
+    
+    <!-- Rererence the source generator project -->
+    <ProjectReference Include="..\karu.bsonly.Generator\karu.bsonly.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" /> <!-- Don't reference the generator dll -->
+
+    <!-- Rererence the attributes project "treat as an analyzer"-->
+    <ProjectReference Include="..\karu.bsonly.Generator.Attributes\karu.bsonly.Generator.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" /> <!-- We DO reference the attributes dll -->
+    
+    <ProjectReference Include="..\karu.bsonly.Serialization.Interface\karu.bsonly.Serialization.Interface.csproj" />
+   
+  </ItemGroup>
+
+</Project>

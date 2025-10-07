@@ -1,0 +1,9 @@
+.vs/
+.vscode/
+.history/
+**/bin/
+**/obj/
+build/
+*.csproj.user
+**/_generated_files/
+**/*.g.cs
