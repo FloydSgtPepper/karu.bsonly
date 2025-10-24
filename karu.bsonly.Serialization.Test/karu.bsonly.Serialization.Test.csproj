@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="4.0.0-preview.25465.3" />
+    <PackageReference Include="MSTest" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\karu.bsonly.Serialization\karu.bsonly.Serialization.csproj" />
+    <ProjectReference Include="..\karu.hexutil\\karu.hexutil.csproj" />
   </ItemGroup>
 
 </Project>

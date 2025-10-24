@@ -47,7 +47,7 @@ public class TestWrapperRegistry
       IntProperty = -1
     };
 
-    var bson_doc = ApiSerializer.Serialize(tc, _write_context);
+    var bson_doc = BsonlySerializer.Serialize(tc, _write_context);
     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
     Debug.WriteLine($"hex {expected}");
 
@@ -68,7 +68,7 @@ public class TestWrapperRegistry
 
     TestClassSimple value = new();
     var bson_doc = HexConverter.HexStringToByteArray(input);
-    ApiSerializer.Deserialize(bson_doc, value, _read_context);
+    BsonlySerializer.Deserialize(bson_doc, value, _read_context);
 
     Assert.AreEqual(4711, value.LongProperty);
     Assert.AreEqual(-1, value.IntProperty);
@@ -90,7 +90,7 @@ public class TestWrapperRegistry
   //                                  00", "\\s+", "");
 
   //   TestClassGenerated value = new();
-  //   ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(input), new DeserializationContext(), value);
+  //   BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(input), new DeserializationContext(), value);
 
   //   Assert.AreEqual(4711, value.LongProperty);
   //   Assert.AreEqual(-1, value.IntProperty);

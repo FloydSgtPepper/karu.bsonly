@@ -3,44 +3,35 @@ using karu.bsonly.Serialization.Interface;
 
 namespace karu.bsonly.Serialization;
 
-// TODO: 
-//   - Wrapper class
-//   - serialize with delegate function
-// 
+
 static public partial class Serializer
 {
   // ISerializable T
-  public static void Serialize<T>(IBaseSerializer serializer, ReadOnlySpan<byte> key, T value) where T : ISerializable
+  public static void Serialize<T>(IDocumentSerializer serializer, byte[] key, T value) where T : ISerializable
+    => Serialize(serializer, key.AsSpan(), value);
+
+  public static void Serialize<T>(IDocumentSerializer serializer, ReadOnlySpan<byte> key, T value) where T : ISerializable
   {
-    serializer.WriteDocument<T>(key, value);
+    var doc_writer = serializer.WriteDocument(key);
+    value.Serialize(doc_writer);
+    doc_writer.FinishSubDocument();
   }
-  public static void Serialize<T>(IBaseDeserializer deserializer, ReadOnlySpan<byte> key, T value) where T : ISerializable
+
+  public static void Serialize<T>(IDocumentDeserializer deserializer, byte[] key, T value) where T : ISerializable
+    => Serialize(deserializer, key.AsSpan(), value);
+  public static void Serialize<T>(IDocumentDeserializer deserializer, ReadOnlySpan<byte> key, T value) where T : ISerializable
   {
     if (deserializer.HasEntry(key, BsonConstants.BSON_TYPE_DOCUMENT))
     {
-      var doc_reader = new MemoryDocReader(deserializer.GetBsonDoc());
-      doc_reader.ReadDocument<T>(value, new DeserializationContext());
+      var doc_reader = deserializer.DocumentReader();
+      value.Deserialize(doc_reader);
+      doc_reader.Finish();
+      // doc_reader.ReadDocument<T>(value, new DeserializationContext()); // FIXME: Context must come from outside
     }
     else
       throw new KeyNotAvailableException($"no entry {System.Text.Encoding.UTF8.GetString(key)} of type \"document\" found");
   }
 
-
-  // public static List<bool> SerializeListOfBool(IBasicDeserializer deserializer, ReadOnlySpan<byte> key)
-  // {
-  //   if (deserializer.HasEntry(key, BsonSerialization.BSON_TYPE_ARRAY))
-  //   {
-  //     var value = new List<bool>();
-  //     var array = deserializer.ReadArray();
-  //     while (array.HasEntry("", BsonSerialization.BSON_TYPE_BOOL))
-  //     {
-  //       value.Add(array.ReadBool());
-  //     }
-  //     return value;
-  //   }
-  //   else
-  //     throw new KeyNotAvailableException($"no entry {key} of type \"long\" found");
-  // }
 }
 
 #region Copyright notice and license

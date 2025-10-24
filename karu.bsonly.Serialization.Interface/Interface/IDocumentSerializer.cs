@@ -4,19 +4,25 @@ namespace karu.bsonly.Serialization.Interface
 {
   public interface IDocumentSerializer
   {
-    // IBaseDeserializer Serializer(ReadOnlySpan<byte> key_string);
+    public void FinishSubDocument();
+    public byte[] Finish();
 
-    void Write(ReadOnlySpan<byte> key_string, long value);
-    void Write(ReadOnlySpan<byte> key_string, int value);
-    void Write(ReadOnlySpan<byte> key_string, double value);
-    void Write(ReadOnlySpan<byte> key_string, bool value);
-    void Write(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> utf8_string);
-    void Write(ReadOnlySpan<byte> key_string); // NULL
-    void Write(ReadOnlySpan<byte> key_string, Guid guid);
+    public SerializationContext Context();
 
-    void Write(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> binary_data, byte binary_subtype);
+    public IBaseSerializer WriteLong(ReadOnlySpan<byte> key);
+    public IBaseSerializer WriteInt(ReadOnlySpan<byte> key);
+    public IBaseSerializer WriteDouble(ReadOnlySpan<byte> key);
+    public IBaseSerializer WriteString(ReadOnlySpan<byte> key);
 
-    // void Finish();
+    public IBaseSerializer WriteBool(ReadOnlySpan<byte> key);
+
+    public IBaseSerializer WriteNull(ReadOnlySpan<byte> key);
+
+    public IDocumentSerializer WriteDocument(ReadOnlySpan<byte> key);
+
+    public IArraySerializer WriteArray(ReadOnlySpan<byte> key);
+
+    public IBaseSerializer WriteBinary(ReadOnlySpan<byte> key);
   }
 }
 

@@ -1,125 +1,48 @@
-
+using System.Diagnostics;
 using karu.bsonly.Serialization.Interface;
 
 namespace karu.bsonly.Serialization;
 
 public class StreamArrayWriter : IArraySerializer
 {
-  // bson array fo ints
-  // "0x2d000000 04 6c6973743100 21000000 10 3000 01000000 10 3100 02000000 10 3200 03000000 10 300 05000000 00 00"
+  private BsonDocumentStream _bson_doc;
 
-  private readonly int _max_document_size;
+  //private StreamBasicWriter _base_writer;
 
-  private Stream _stream;
+  private int _current_index;
 
-  private int index_key = 0;
+  private bool _empty_keys;
 
   private byte[] _buffer = new byte[11]; // int32.max = 2,147,483,647
 
-  private readonly long _start_position;
-
-  public StreamArrayWriter(Stream stream, int max_doc_size)
+  public StreamArrayWriter(BsonDocumentStream bson_document, bool empty_keys = false)
   {
-    _max_document_size = max_doc_size;
-    _stream = stream;
-
-    _start_position = _stream.Position;
-    WriteSize(0); // dummy write
+    _current_index = 0;
+    _bson_doc = bson_document.SubDocument();
+    _empty_keys = empty_keys;
+    _bson_doc.StartDoc(); // dummy write
   }
 
-  public IBaseSerializer Append()
+
+  public ReadOnlySpan<byte> NextKey()
   {
-    WriteTypeId(BsonConstants.BSON_TYPE_ARRAY);
+    if (_empty_keys)
+      return ReadOnlySpan<byte>.Empty;
 
-    WriteString(WriteIndexAsString(index_key));
-    ++index_key;
-
-    return new StreamWriter(_stream, _max_document_size);
+    var array_key = WriteIndexAsString(_current_index);
+    ++_current_index;
+    return array_key;
   }
 
-  public void Add(long value)
-  {
-    BasicWriter.WriteLong(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void Add(int value)
-  {
-    BasicWriter.WriteInt(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void Add(ReadOnlySpan<byte> value)
-  {
-    BasicWriter.WriteString(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void Add(bool value)
-  {
-    BasicWriter.WriteBool(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void Add(double value)
-  {
-    BasicWriter.WriteDouble(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void AddNull()
-  {
-    BasicWriter.WriteNull(_stream, WriteIndexAsString(index_key));
-    ++index_key;
-  }
-
-  public void Add(Guid value)
-  {
-    BasicWriter.WriteGuid(_stream, WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public void AddBinary(ReadOnlySpan<byte> value, byte binary_subtype)
-  {
-    BasicWriter.WriteBinary(_stream, WriteIndexAsString(index_key), value, binary_subtype);
-    ++index_key;
-  }
-
-  public void AddDocument<T>(T value) where T : ISerializable
-  {
-    var writer = new StreamWriter(_stream, _max_document_size);
-    writer.WriteDocument(WriteIndexAsString(index_key), value);
-    ++index_key;
-  }
-
-  public (IBaseSerializer value_serializer, byte[] key_string) SerializeValue()
-  {
-    var writer = new StreamWriter(_stream, _max_document_size, value_writer: true);
-    byte[] key = WriteIndexAsString(index_key).ToArray();
-    ++index_key;
-    return (writer, key);
-  }
-
+  // public StreamBasicWriter Write(byte type)
+  // {
+  //   _base_writer.WriteKeyAndType(WriteIndexAsString(_current_index), type);
+  //   return _base_writer;
+  // }
 
   public void Finish()
   {
-    WriteTypeId(BsonConstants.BSON_TYPE_EOD);
-    var size = _stream.Position - _start_position;
-
-    if (size < _max_document_size)
-    {
-      _stream.Seek(_start_position, SeekOrigin.Begin);
-      WriteSize((int)size);
-      _stream.Seek(0, SeekOrigin.End);
-      return;
-    }
-
-    throw new ArgumentException("the bson document is too big");
-  }
-
-  private void WriteTypeId(byte type_id)
-  {
-    _stream.WriteByte(type_id);
+    _bson_doc.WriteDocSizeAndEod();
   }
 
   private ReadOnlySpan<byte> WriteIndexAsString(int index)
@@ -127,24 +50,12 @@ public class StreamArrayWriter : IArraySerializer
     int bytes_written;
     index.TryFormat(_buffer.AsSpan(), out bytes_written);
     if (bytes_written < _buffer.Length)
-    {
       return _buffer.AsSpan(0, bytes_written);
-    }
 
     return ReadOnlySpan<byte>.Empty;
   }
-  private void WriteString(ReadOnlySpan<byte> utf8_string)
-  {
-    _stream.Write(utf8_string);
-    _stream.WriteByte(0);
-  }
-
-  private void WriteSize(int size)
-  {
-    var size_bytes = BitConverter.GetBytes(size);
-    _stream.Write(size_bytes);
-  }
 }
+
 
 #region Copyright notice and license
 

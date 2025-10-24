@@ -9,12 +9,13 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Mono.Cecil.Cil;
 using karu.bsonly.Generator;
+using karu.bsonly.Serialization.Interface;
 
 namespace karu.bsonly.Generator.Test;
 
-using VerifyGenerator = CSharpSourceGeneratorVerifier<Generator.ApiGenerator>;
+using VerifyGenerator = CSharpSourceGeneratorVerifier<Generator.BsonlyGenerator>;
 
-[ApiGenerator]
+[BsonlyGenerator]
 partial class TestClass1
 {
   [ApiElement(name: "foo", order: 2)]
@@ -46,7 +47,7 @@ partial class TestClass1
   }
 }
 
-[ApiGenerator]
+[BsonlyGenerator]
 partial class TestClass5
 {
   [ApiElement("MyChar", order: 42)]
@@ -56,12 +57,10 @@ partial class TestClass5
   [ApiOrder(order: 42)]
   public int IntAsLong = 42;
 
-
   [ApiName(name: "barbar")]
   [ApiOrder(0)]
   public int AnotherIntAsLong = 42;
 }
-
 
 [TestClass]
 public class TestSerializerGenerator
@@ -79,7 +78,7 @@ using karu.bsonly.Generator;
 
 namespace karu.bsonly.Serialization.Test;
 
-[ApiGenerator]
+[BsonlyGenerator]
 partial class TestClassGenerated
 {
   public long LongProperty = 0;
@@ -104,7 +103,7 @@ partial class TestClassGenerated : global::karu.bsonly.Serialization.Interface.I
     _generated_param_writer.WriteInt("IntProperty"u8, this.IntProperty);
   }
   
-  public void Deserialize(global::karu.bsonly.Serialization.Interface.IBaseDeserializer _generated_param_reader, global::karu.bsonly.Serialization.Interface.DeserializationContext _generated_param_context)
+  public void Deserialize(global::karu.bsonly.Serialization.Interface.IDocumentDeserializer _generated_param_reader, global::karu.bsonly.Serialization.Interface.DeserializationContext _generated_param_context)
   {
     if (_generated_param_reader.HasEntry("LongProperty"u8, global::karu.bsonly.Serialization.Interface.BsonSerialization.BsonConstantsBSON_TYPE_INT64))
       this.LongProperty = _generated_param_reader.ReadLong(); // order: -1 type: "long"
@@ -124,7 +123,7 @@ partial class TestClassGenerated : global::karu.bsonly.Serialization.Interface.I
                 Sources = { code },
                 GeneratedSources =
                 {
-                    (typeof(Generator.ApiGenerator), "TestInput.g.cs", SourceText.From(expected, Encoding.UTF8))
+                    (typeof(Generator.BsonlyGenerator), "TestClassGenerated.g.cs", SourceText.From(expected, Encoding.UTF8))
                     // ("TestInput.g.cs", expected),
                 }
             },

@@ -4,42 +4,9 @@ namespace karu.bsonly.Serialization.Interface
 {
   public interface IArraySerializer
   {
-    // IBaseSerializer Append();
+    public ReadOnlySpan<byte> NextKey();
 
-    // void Finish();
-
-
-    void Add(long value);
-
-    void Add(int value);
-
-    void Add(double value);
-
-    void Add(bool value);
-
-    void AddNull();
-
-    void Add(ReadOnlySpan<byte> value);
-
-    void Add(Guid value);
-
-    void AddBinary(ReadOnlySpan<byte> binary, byte binary_subtype);
-
-    // void AddArray(); TODO:
-
-    /// <summary>
-    /// add a document which is already serialized
-    /// </summary>
-    /// <param name="binary">serialized document</param>
-    // void AddDocument(ReadOnlySpan<byte> binary);
-
-    void AddDocument<T>(T value) where T : ISerializable;
-
-    // void AddDocument(object value);
-
-    (IBaseSerializer value_serializer, byte[] key_string) SerializeValue();
-
-    void Finish();
+    public void Finish();
   }
 }
 

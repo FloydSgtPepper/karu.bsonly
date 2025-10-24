@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -15,10 +16,12 @@ using System.Text;
 
 namespace karu.bsonly.Generator
 {
+  // see https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/converters-how-to
+
   [Generator(LanguageNames.CSharp)]
-  public class WrapperGenerator : IIncrementalGenerator
+  public class BsonlyGenerator : IIncrementalGenerator
   {
-    const string BSONLY_SERIALIZATION_ATTR_NAME = "karu.bsonly.Serialization.Generator.WrapAttribute";
+    const string BSONLY_SERIALIZATION_ATTR_NAME = "karu.bsonly.Generator.BsonlyGeneratorAttribute";
     const string FAILED_NAME = "FAILED";
 
     // private ImmutableArray<Model> _models;
@@ -37,10 +40,12 @@ namespace karu.bsonly.Generator
           transform: static (context, cancellationToken) =>
           {
             var syntax_node = context.TargetSymbol;
+            // https://sharplab.io/
             var class_syntax = context.TargetNode as ClassDeclarationSyntax;
 
             var properties = GetPublicProperties(class_syntax!, context.SemanticModel);
             var props = new EquatableArray<Property>(properties);
+            // var foo = containingClass.fullyQualifiedMetadataName
             return new Model
             {
               // Note: this is a simplified example. You will also need to handle the case where the type is in a global namespace, nested, etc.
@@ -48,30 +53,25 @@ namespace karu.bsonly.Generator
               ClassName = syntax_node.Name,
               Properties = props,
               WriteEncode = true,
-              WriteDecode = true,
-              // WrappedClass = "karu.bsonly.Serialization.Test.WrappedClassInner"
+              WriteDecode = true
             };
           }
       );
 
       context.RegisterSourceOutput(pipeline, static (context, model) =>
       {
+        //set the location we want to save the log file
         StringBuilder builder = new();
         using System.IO.StringWriter writer = new(builder, CultureInfo.InvariantCulture);
-        using (var source_writer = new System.CodeDom.Compiler.IndentedTextWriter(writer, "  "))
+        using (var sourceWriter = new System.CodeDom.Compiler.IndentedTextWriter(writer, "  "))
         {
-          SerializationFunctionWriter.WriteIntro(model, source_writer);
-          if (model.WriteEncode)
-            SerializationFunctionWriter.WriteSerializeToBson(model, source_writer);
-          if (model.WriteDecode)
-            SerializationFunctionWriter.WriteSerializeFromBson(model, source_writer);
-          SerializationFunctionWriter.WriteClassEnd(model, source_writer);
-          SerializationFunctionWriter.WriteOuttro(model, source_writer);
+          SerializationFunctionWriter.WriteIntro(model, sourceWriter);
 
+          SerializationFunctionWriter.WriteSerializeToBson(model, sourceWriter);
+          SerializationFunctionWriter.WriteSerializeFromBson(model, sourceWriter);
+          SerializationFunctionWriter.WriteClassEnd(model, sourceWriter);
 
-          if (model.WrappedClass != string.Empty)
-            SerializationFunctionWriter.WriteWrapSerializerClass(model, source_writer);
-
+          SerializationFunctionWriter.WriteOuttro(model, sourceWriter);
 
           context.AddSource($"{model.ClassName}.g.cs", builder.ToString());
         }
@@ -88,7 +88,6 @@ namespace karu.bsonly.Generator
         {
           var field = member as FieldDeclarationSyntax;
 
-          // properties.Add(new("string", "ATTR", $"ATTR", $"attr", -1));  //field!.AttributeLists.Count));
           var member_attributes = new AttrProperty(string.Empty, string.Empty, -1);
           if (field!.AttributeLists.Count > 0)
           {
@@ -99,14 +98,28 @@ namespace karu.bsonly.Generator
               {
                 var attr = attr_list.Attributes[attr_idx];
                 var name = attr!.Name.ToString();
-                var gen_attribute = GeneratorAttributeData.SupportedAttributes(name);
-                var prop = GetMemberAttributeProperties(gen_attribute, name, attr!);
+                var attribute_data = GeneratorAttributeData.SupportedAttributes(name);
+                var prop = GetMemberAttributeProperties(attribute_data, name, attr!);
+
+                // copy to member_attributes - if not already set
+                // so this means the first attributes that sets the data wins
                 if (prop.BsonType != string.Empty)
-                  member_attributes.BsonName = prop.BsonType;
+                  member_attributes.BsonType = prop.BsonType;
                 if (prop.BsonName != string.Empty)
                   member_attributes.BsonName = prop.BsonName;
                 if (prop.Order != -1 && member_attributes.Order != Property.IGNORE_VALUE)
                   member_attributes.Order = prop.Order;
+
+                if (prop.UserType != BsonlyBinaryDataAttribute.DefaultType)
+                  member_attributes.UserType = prop.UserType;
+                if (prop.BinaryType != BsonlyBinaryDataAttribute.DefaultType)
+                  member_attributes.BinaryType = prop.UserType;
+                if (prop.SerializationMethod != string.Empty)
+                {
+                  char[] chars_to_trim = { '\"' };
+                  var tmp = prop.SerializationMethod.Trim(chars_to_trim);
+                  member_attributes.SerializationMethod = tmp;
+                }
 
                 // member_attributes.Debug += ">>" + prop.Debug + "<<";
               }
@@ -123,7 +136,9 @@ namespace karu.bsonly.Generator
               member_attributes.BsonName = "\"" + name + "\"";
             if (member_attributes.BsonType == string.Empty)
               member_attributes.BsonType = "\"" + type + "\"";
-            properties.Add(new Property(type, name, member_attributes.BsonName, member_attributes.BsonType, member_attributes.Order/*, member_attributes.Debug*/));
+            properties.Add(new Property(type, name, member_attributes.BsonName, member_attributes.BsonType, member_attributes.Order,
+                                            member_attributes.SerializationMethod, member_attributes.BinaryType, member_attributes.BinaryType
+                                          /*, member_attributes.Debug*/));
           }
         }
       }
@@ -168,7 +183,6 @@ namespace karu.bsonly.Generator
 
     static AttrProperty GetMemberAttributeProperties(Attributes attribute, string debug_value, AttributeSyntax attribute_data)
     {
-
       if (attribute == Attributes.ApiIgnore)
         return new(debug_value, debug_value, Property.IGNORE_VALUE);
 
@@ -178,16 +192,22 @@ namespace karu.bsonly.Generator
       if (attribute == Attributes.ApiOrder)
         return HandleApiOrder(attribute_data);
 
-      if (attribute == Attributes.ApiType)
-        return HandleApiType(attribute_data);
+      if (attribute == Attributes.BsonlyType)
+        return HandleTypeAttribute(attribute_data);
 
       if (attribute == Attributes.ApiName)
         return HandleApiName(attribute_data);
 
+      if (attribute == Attributes.BsonlyUtf8)
+        return new(string.Empty, "Utf8", Property.DEAULT_ORDER_VALUE);
+
+      if (attribute == Attributes.BsonlyBinaryData)
+        return HandleBinaryData(attribute_data);
+
       return new AttrProperty(string.Empty, $"unknown attribute {debug_value}", -1);
     }
 
-    static (string name, string value) HaandleAttributeArgument(AttributeArgumentSyntax argument)
+    static (string name, string value) HandleAttributeArgument(AttributeArgumentSyntax argument)
     {
       var name_colon = argument.NameColon;
       if (name_colon != null)
@@ -221,7 +241,7 @@ namespace karu.bsonly.Generator
       if (attribute_data.ArgumentList != null)
       {
         var args = attribute_data.ArgumentList.Arguments;
-        var (name, value) = HaandleAttributeArgument(args[0]);
+        var (name, value) = HandleAttributeArgument(args[0]);
         if (name == "name" || name == string.Empty)
           return new AttrProperty(value, string.Empty, Property.DEAULT_ORDER_VALUE);
       }
@@ -230,17 +250,17 @@ namespace karu.bsonly.Generator
       return prop;
     }
 
-    static AttrProperty HandleApiType(AttributeSyntax attribute_data)
+    static AttrProperty HandleTypeAttribute(AttributeSyntax attribute_data)
     {
       if (attribute_data.ArgumentList != null)
       {
         var args = attribute_data.ArgumentList.Arguments;
-        var (name, value) = HaandleAttributeArgument(args[0]);
+        var (name, value) = HandleAttributeArgument(args[0]);
         if (name == "name" || name == string.Empty)
           return new AttrProperty(value, string.Empty, Property.DEAULT_ORDER_VALUE);
       }
       var prop = new AttrProperty(FAILED_NAME, string.Empty, Property.DEAULT_ORDER_VALUE);
-      // prop.Debug = $"FAILED ApiType >{value}<";
+      // prop.Debug = $"FAILED BsonlyType >{value}<";
       return prop;
     }
 
@@ -249,7 +269,7 @@ namespace karu.bsonly.Generator
       if (attribute_data.ArgumentList != null)
       {
         var args = attribute_data.ArgumentList.Arguments;
-        var (name, value) = HaandleAttributeArgument(args[0]);
+        var (name, value) = HandleAttributeArgument(args[0]);
         if (name == "order" || name == string.Empty)
           if (int.TryParse(value, out var order))
             return new AttrProperty(string.Empty, string.Empty, order);
@@ -269,7 +289,7 @@ namespace karu.bsonly.Generator
         var arguments = attribute_data.ArgumentList.Arguments;
         for (var arg_idx = 0; arg_idx < arguments.Count; ++arg_idx)
         {
-          var (name, value) = HaandleAttributeArgument(arguments[arg_idx]);
+          var (name, value) = HandleAttributeArgument(arguments[arg_idx]);
           if (name != FAILED_NAME)
           {
             if (name == "name")
@@ -315,6 +335,79 @@ namespace karu.bsonly.Generator
           // properties.Debug += "FAILED: {value}";
         }
       }
+      return properties;
+    }
+
+    static AttrProperty HandleBinaryData(AttributeSyntax attribute_data)
+    {
+      var properties = new AttrProperty(
+                        string.Empty,
+                        BsonlyBinaryDataAttribute.DefaultType,
+                        BsonlyBinaryDataAttribute.DefaultType);
+
+      properties.BsonType = "binary";
+      if (attribute_data.ArgumentList != null)
+      {
+        var arguments = attribute_data.ArgumentList.Arguments;
+        for (var arg_idx = 0; arg_idx < arguments.Count; ++arg_idx)
+        {
+          var (name, value) = HandleAttributeArgument(arguments[arg_idx]);
+          if (name != FAILED_NAME)
+          {
+            if (name == "serialization_method")
+            {
+              properties.SerializationMethod = value;
+              continue;
+            }
+            else if (name == "binary_type")
+            {
+              if (byte.TryParse(value, out var binary_type))
+              {
+                properties.BinaryType = binary_type;
+                continue;
+              }
+            }
+            else if (name == "user_type")
+            {
+              if (byte.TryParse(value, out var user_type))
+              {
+                properties.UserType = user_type;
+                continue;
+              }
+            }
+
+            if (arg_idx == 0 && arguments.Count == 3)
+            {
+              properties.SerializationMethod = value;
+              continue;
+            }
+            else if ((arg_idx == 0 && arguments.Count == 2)
+                  || (arg_idx == 1 && arguments.Count == 3))
+            {
+              if (byte.TryParse(value, out var binary_type))
+              {
+                properties.BinaryType = binary_type;
+                continue;
+              }
+              continue;
+            }
+            else if ((arg_idx == 1 && arguments.Count == 2)
+                  || (arg_idx == 2 && arguments.Count == 3))
+            {
+              if (byte.TryParse(value, out var user_type))
+              {
+                properties.UserType = user_type;
+                continue;
+              }
+              continue;
+            }
+
+          }
+
+          // properties.Debug += "FAILED: {value}";
+        }
+      }
+
       return properties;
     }
 

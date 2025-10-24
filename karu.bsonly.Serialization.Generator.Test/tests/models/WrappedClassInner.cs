@@ -21,14 +21,14 @@ partial class WrapperClassInner : ISerializationProvider, ISerializable
   public long LongProperty = 0;
   public int IntProperty = 0;
 
-  public void Serialize(IBaseSerializer serializer, SerializationContext context)
+  public void Serialize(IDocumentSerializer serializer)
   {
     Serializer.Serialize(serializer, "StrProperty"u8, this.StrProperty);
     Serializer.Serialize(serializer, "LongProperty"u8, this.LongProperty);
     Serializer.Serialize(serializer, "IntProperty"u8, this.IntProperty);
   }
 
-  public void Deserialize(IBaseDeserializer deserializer, DeserializationContext context)
+  public void Deserialize(IDocumentDeserializer deserializer)
   {
     Serializer.Serialize(deserializer, "StrProperty"u8, ref this.StrProperty);
     Serializer.Serialize(deserializer, "LongProperty"u8, ref this.LongProperty);
@@ -36,14 +36,14 @@ partial class WrapperClassInner : ISerializationProvider, ISerializable
   }
 
   /* generated if not provided */
-  public void DeserializationFunction(IBaseDeserializer deserializer, ref object? value, Type type, DeserializationContext context)
+  public void DeserializationFunction(IDocumentDeserializer deserializer, ReadOnlySpan<byte> key,ref object? value, Type type)
   {
-    Deserialize(deserializer, context);
+    Deserialize(deserializer);
     value = SetWrappedValues();
   }
 
   /* generated if not provided */
-  public void SerializationFunction(IBaseSerializer serializer, ReadOnlySpan<byte> key, object value, Type type, SerializationContext context)
+  public void SerializationFunction(IDocumentSerializer serializer, ReadOnlySpan<byte> key, object value, Type type)
   {
     var tc = value as WrappedClassInner;
     if (tc != null)
@@ -96,13 +96,13 @@ partial class WrapperClassInner : ISerializationProvider, ISerializable
 // generated in Serializer class
 public static class WrapperSerializer
 {
-  public static void Serialize(IBaseSerializer serializer, ReadOnlySpan<byte> key, WrappedClassInner value)
+  public static void Serialize(IDocumentSerializer serializer, ReadOnlySpan<byte> key, WrappedClassInner value)
   {
     var wrapped_value = new WrapperClassInner(value);
     Serializer.Serialize<WrapperClassInner>(serializer, key, wrapped_value);
   }
 
-  public static void Serialize(IBaseDeserializer deserializer, ReadOnlySpan<byte> key, WrappedClassInner value)
+  public static void Serialize(IDocumentDeserializer deserializer, ReadOnlySpan<byte> key, WrappedClassInner value)
   {
     var wrapped_value = new WrapperClassInner(value);
     Serializer.Serialize<WrapperClassInner>(deserializer, key, wrapped_value);

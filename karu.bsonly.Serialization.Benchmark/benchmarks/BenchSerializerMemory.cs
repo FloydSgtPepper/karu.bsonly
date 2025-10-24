@@ -21,7 +21,7 @@
 //     private readonly SerializationContext _serialization_context;
 //     private readonly DeserializationContext _deserialization_context;
 
-//     private readonly karu.bsonly.Serialization.MemoryReader _stream_reader;
+//     private readonly karu.bsonly.Serialization.MemoryDocReader _stream_reader;
 
 //     private IBaseSerializer _writer;
 
@@ -51,7 +51,7 @@
 //       _tc_deserializable = new();
 
 //       var stream = new MemoryStream(_bson_doc_read);
-//       _stream_reader = new MemoryReader(stream, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
+//       _stream_reader = new MemoryDocReader(stream, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
 
 //       _writer = new StreamWriter(BsonSettings.BSON_API.MaxSize); // 
 //     }
@@ -65,7 +65,7 @@
 //     [Benchmark]
 //     public void Serialize_StreamWriter()
 //     {
-//       _bson_doc_write = ApiSerializer.Serialize(_tc_serializable, _serialization_context);
+//       _bson_doc_write = BsonlySerializer.Serialize(_tc_serializable, _serialization_context);
 //     }
 
 //     [Benchmark]
@@ -74,7 +74,7 @@
 //       Deserialize(_stream_reader, _deserialization_context, _tc_deserializable);
 //     }
 
-//     private void Deserialize(IBaseDeserializer deserializer, DeserializationContext context, ISerializable value)
+//     private void Deserialize(IDocumentDeserializer deserializer, DeserializationContext context, ISerializable value)
 //     {
 //       try
 //       {

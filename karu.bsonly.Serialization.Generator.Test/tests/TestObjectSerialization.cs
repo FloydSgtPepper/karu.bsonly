@@ -20,7 +20,7 @@ public class TestObjectSerialization
 
     public int IntProperty;
 
-    public void Deserialize(IBaseDeserializer deserializer, DeserializationContext context)
+    public void Deserialize(IDocumentDeserializer deserializer)
     {
       if (deserializer.HasEntry("LongProperty"u8, BsonConstants.BSON_TYPE_INT64))
         LongProperty = deserializer.ReadLong();
@@ -31,16 +31,16 @@ public class TestObjectSerialization
       // if (tmp != null)
       //   ObjectProperty = tmp;
       object? obj_tmp = null;
-      Serializer.Serialize(deserializer, "ObjectProperty"u8, ref obj_tmp, typeof(object), context);
+      Serializer.Serialize(deserializer, "ObjectProperty"u8, ref obj_tmp, typeof(object));
       if (deserializer.HasEntry("IntProperty"u8, BsonConstants.BSON_TYPE_INT32))
         IntProperty = deserializer.ReadInt();
     }
 
-    public void Serialize(IBaseSerializer serializer, SerializationContext context)
+    public void Serialize(IDocumentSerializer serializer)
     {
-      serializer.WriteLong("LongProperty"u8, LongProperty);
-      Serializer.SerializeObjectType(serializer, "ObjectProperty"u8, ObjectProperty, context);
-      serializer.WriteInt("IntProperty"u8, IntProperty);
+      serializer.WriteLong("LongProperty"u8).WriteLong(LongProperty);
+      Serializer.SerializeObjectType(serializer, "ObjectProperty"u8, ObjectProperty);
+      serializer.WriteInt("IntProperty"u8).WriteInt( IntProperty);
     }
   };
 
@@ -49,15 +49,15 @@ public class TestObjectSerialization
   {
     public required object? ObjectProperty;
 
-    public void Deserialize(IBaseDeserializer deserializer, DeserializationContext context)
+    public void Deserialize(IDocumentDeserializer deserializer)
     {
       object? obj_tmp = null;
-      Serializer.Serialize(deserializer, "ObjectProperty"u8, ref obj_tmp, typeof(object), context);
+      Serializer.Serialize(deserializer, "ObjectProperty"u8, ref obj_tmp, typeof(object));
     }
 
-    public void Serialize(IBaseSerializer serializer, SerializationContext context)
+    public void Serialize(IDocumentSerializer serializer)
     {
-      Serializer.SerializeObjectType(serializer, "ObjectProperty"u8, ObjectProperty, context);
+      Serializer.SerializeObjectType(serializer, "ObjectProperty"u8, ObjectProperty);
     }
   };
 
@@ -88,7 +88,7 @@ public class TestObjectSerialization
       IntProperty = -1
     };
 
-    var bson_doc = ApiSerializer.Serialize(tc, _context);
+    var bson_doc = BsonlySerializer.Serialize(tc, _context);
     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
     Debug.WriteLine($"hex {expected}");
 
@@ -123,7 +123,7 @@ public class TestObjectSerialization
 
   //     var actual = new WrappedClass();
 
-  //     ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, actual);
+  //     BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, actual);
 
   //     Assert.AreEqual(expected.LongProperty, actual.LongProperty);
   //     Assert.AreEqual(expected.IntProperty, actual.IntProperty);
@@ -149,7 +149,7 @@ public class TestObjectSerialization
   //       IsJson = false
   //     };
 
-  //     var bson_doc = ApiSerializer.Serialize(tc, context);
+  //     var bson_doc = BsonlySerializer.Serialize(tc, context);
   //     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
   //     Debug.WriteLine($"hex {expected}");
 
@@ -173,7 +173,7 @@ public class TestObjectSerialization
   //     };
 
   //     var tc = new TestStructWithObject { ObjectProperty = 0 };
-  //     ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
+  //     BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
 
   //     Assert.AreEqual(expected.LongProperty, tc.LongProperty);
   //     Assert.AreEqual(expected.ObjectProperty.GetType(), typeof(string));
@@ -196,7 +196,7 @@ public class TestObjectSerialization
   //       IsJson = false
   //     };
 
-  //     var bson_doc = ApiSerializer.Serialize(tc, context);
+  //     var bson_doc = BsonlySerializer.Serialize(tc, context);
   //     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
   //     Debug.WriteLine($"hex {expected}");
 
@@ -220,7 +220,7 @@ public class TestObjectSerialization
   //     };
 
   //     var tc = new TestStructWithObject { ObjectProperty = 0 };
-  //     ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
+  //     BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
 
   //     Assert.AreEqual(expected.LongProperty, tc.LongProperty);
   //     Assert.AreEqual(expected.ObjectProperty.GetType(), typeof(int));
@@ -243,7 +243,7 @@ public class TestObjectSerialization
   //       IsJson = false
   //     };
 
-  //     var bson_doc = ApiSerializer.Serialize(tc, context);
+  //     var bson_doc = BsonlySerializer.Serialize(tc, context);
   //     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
   //     Debug.WriteLine($"hex {expected}");
 
@@ -267,7 +267,7 @@ public class TestObjectSerialization
   //     };
 
   //     var tc = new TestStructWithObject { ObjectProperty = 0 };
-  //     ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
+  //     BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
 
   //     Assert.AreEqual(expected.LongProperty, tc.LongProperty);
   //     Assert.IsTrue(tc.ObjectProperty == null);
@@ -296,7 +296,7 @@ public class TestObjectSerialization
   //       IsJson = false
   //     };
 
-  //     var bson_doc = ApiSerializer.Serialize(tc, context);
+  //     var bson_doc = BsonlySerializer.Serialize(tc, context);
   //     Debug.WriteLine($"hex {HexConverter.ByteArrayToHexString(bson_doc)}");
   //     Debug.WriteLine($"hex {expected}");
 
@@ -326,7 +326,7 @@ public class TestObjectSerialization
   //     };
 
   //     var tc = new TestStructWithObject { ObjectProperty = new TestClassWithObject2 { ObjectProperty = 0 } };
-  //     ApiSerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
+  //     BsonlySerializer.Deserialize(HexConverter.HexStringToByteArray(bson), context, tc);
 
   //     Assert.AreEqual(expected.LongProperty, tc.LongProperty);
   //     Assert.AreEqual(expected.ObjectProperty.GetType(), typeof(TestClassWithObject2));

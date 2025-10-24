@@ -4,14 +4,14 @@ using karu.bsonly.Generator;
 
 namespace karu.bsonly.Serialization.Test;
 
-[ApiGenerator]
+[BsonlyGenerator]
 partial class TestClassInnerGenerated
 {
   public string StrProperty = string.Empty;
   public long LongProperty = 0;
   public int IntProperty = 0;
 
-  [ApiUtf8]
+  [BsonlyUtf8]
   public byte[] Utf8String = Array.Empty<byte>();
 }
 

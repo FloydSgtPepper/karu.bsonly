@@ -10,7 +10,7 @@ namespace karu.bsonly.Serialization.Interface
   public enum Arrays : byte
   {
     COMPLIANT,
-    NO_KEYS
+    EMPTY_KEYS
   };
 
   public enum Format : byte
@@ -26,28 +26,52 @@ namespace karu.bsonly.Serialization.Interface
     EXPANDED
   };
 
+  public enum GuidRepresentation : byte
+  {
+    STANDARD,
+    CSHARP_LEGACY
+  }
+
   public class BsonSettings
   {
-    public static BsonSettings BSON_API = new BsonSettings
+    public static BsonSettings BSONLY_API = new BsonSettings
     {
-      OutOfOrderEvaluation = true,
-      MaxSize = int.MaxValue,
+      OutOfOrderEvaluation = false,
       Sequences = Sequences.BINARY,
-      Arrays = Arrays.NO_KEYS,
+      Arrays = Arrays.EMPTY_KEYS,
       Format = Format.BSON,
-      Compaction = Compaction.COMPRESSED
+      Compaction = Compaction.COMPRESSED,
+      GuidRepresentation = GuidRepresentation.STANDARD,
     };
 
-    public bool OutOfOrderEvaluation { get; set; } = false;
+    public static BsonSettings BSON_API = new BsonSettings
+    {
+      OutOfOrderEvaluation = false,
+      Sequences = Sequences.STRUCTURED,
+      Arrays = Arrays.COMPLIANT,
+      Format = Format.BSON,
+      Compaction = Compaction.COMPRESSED,
+      GuidRepresentation = GuidRepresentation.STANDARD,
+    };
 
-    public int MaxSize = int.MaxValue;
+    public BsonSettings()
+    {
+      OutOfOrderEvaluation = false;
+      Sequences = Sequences.BINARY;
+      Arrays = Arrays.COMPLIANT;
+      Format = Format.BSON;
+      Compaction = Compaction.COMPRESSED;
+      GuidRepresentation = GuidRepresentation.STANDARD;
+    }
+
+    public bool OutOfOrderEvaluation { get; set; } = false;
 
     public Sequences Sequences = Sequences.STRUCTURED;
 
     public Arrays Arrays = Arrays.COMPLIANT;
     public Format Format = Format.BSON;
     public Compaction Compaction = Compaction.COMPRESSED;
-
+    public GuidRepresentation GuidRepresentation = GuidRepresentation.STANDARD;
   }
 }
 

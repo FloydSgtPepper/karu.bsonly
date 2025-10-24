@@ -1,30 +1,10 @@
-using System;
 
-namespace karu.bsonly.Serialization.Interface
+namespace karu.bsonly.Generator
 {
-  public interface IBaseSerializerNoKeys
+  [System.AttributeUsage(System.AttributeTargets.Field)]
+  public class BsonlyUtf8Attribute : System.Attribute
   {
-    void WriteLong(long value);
 
-    void WriteInt(int value);
-
-    void WriteDouble(double value);
-
-    void WriteBool(bool value);
-
-    void WriteNull();
-
-    void WriteString(ReadOnlySpan<byte> value);
-
-    void WriteGuid(Guid value);
-
-    void WriteBinary(ReadOnlySpan<byte> binary_data, byte binary_subtype);
-    // void WriteRawBinary(  ReadOnlySpan<byte> binary);
-
-    public void WriteDocument<T>(T document) where T : ISerializable;
-
-    // write an already serialized document
-    public void WriteRawDocument(ReadOnlySpan<byte> document);
   }
 }
 

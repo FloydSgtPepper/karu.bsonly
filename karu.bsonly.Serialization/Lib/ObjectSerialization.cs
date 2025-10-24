@@ -8,12 +8,12 @@ static class ObjectSerialization
 {
   private static MethodInfo? SerializationMethod(Type value_type)
   {
-    var parameter_types = new Type[] { typeof(IBaseSerializer), typeof(SerializationContext) };
+    var parameter_types = new Type[] { typeof(IDocumentSerializer)};
     var method_deserialize = value_type.GetMethod("Serialize", BindingFlags.Instance | BindingFlags.Public, parameter_types);
     return method_deserialize;
   }
 
-  public static void Serialize(IBaseSerializer serializer, object value, SerializationContext context)
+  public static void Serialize(IDocumentSerializer serializer, object value)
   {
     var type_of_value = value.GetType();
     var serialize_method = SerializationMethod(type_of_value);
@@ -21,7 +21,7 @@ static class ObjectSerialization
     {
       try
       {
-        var parameters = new object[] { serializer, context };
+        var parameters = new object[] { serializer };
         serialize_method.Invoke(value, parameters);
         return;
       }
@@ -31,8 +31,8 @@ static class ObjectSerialization
       }
     }
 
-    if (context != null)
     {
+      var context = serializer.Context();
       if (context.SerializationRegistry != null)
       {
         var serialization_fct = context.SerializationRegistry.Serializer(value.GetType());
@@ -58,10 +58,10 @@ static class ObjectSerialization
   }
 
 
-  public static void Deserialize(IBaseDeserializer deserializer, object value)
+  public static void Deserialize(IDocumentDeserializer deserializer, object value)
   {
     // member function
-    var parameter_types = new Type[] { typeof(IBaseDeserializer), typeof(DeserializationContext) };
+    var parameter_types = new Type[] { typeof(IDocumentDeserializer), typeof(DeserializationContext) };
     var method_deserialize = value.GetType().GetMethod("Deserialize", BindingFlags.Instance | BindingFlags.Public, parameter_types);
     if (method_deserialize != null)
     {

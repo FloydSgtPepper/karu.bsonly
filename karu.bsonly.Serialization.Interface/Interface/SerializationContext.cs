@@ -16,6 +16,12 @@ namespace karu.bsonly.Serialization.Interface
       SerializationRegistry = null,
       Configuration = BsonSettings.BSON_API
     };
+
+    public SerializationContext()
+    {
+      SerializationRegistry = null;
+      Configuration = new BsonSettings();
+    }
   }
 }
 

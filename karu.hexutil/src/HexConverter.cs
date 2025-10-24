@@ -1,15 +1,10 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace karu.bsonly.Serialization.Test.Utils;
+namespace karu.hexutil;
 
 public static class HexConverter
 {
-  public static string RemoveSpaces(string input)
-  {
-    return Regex.Replace(input, "\\s+", "");
-  }
-
   public static byte[] HexStringToByteArray(string hexString)
   {
     // Remove the "0x" prefix if it exists
@@ -52,8 +47,6 @@ public static class HexConverter
   public static byte[] ToByteArray(char[] input)
   {
     var output = new byte[input.Length];
-    // var input_cnv = new ReadOnlySpan<byte>(&input);
-    // Array.Copy(input_cnv, output, input.Length,
     for (int idx = 0; idx < input.Length; ++idx)
     {
       output[idx] = (byte)input[idx];
@@ -64,12 +57,9 @@ public static class HexConverter
   public static char[] ToCharArray(byte[] input)
   {
     var output = new char[input.Length];
-    // var input_cnv = new ReadOnlySpan<byte>(&input);
-    // Array.Copy(input_cnv, output, input.Length,
     for (int idx = 0; idx < input.Length; ++idx)
-    {
       output[idx] = (char)input[idx];
-    }
+
     return output;
   }
 
@@ -77,11 +67,6 @@ public static class HexConverter
   {
     return System.Text.Encoding.UTF8.GetString(input);
   }
-
-  // public static string ByteArrayToHexString(Span<byte> byteArray)
-  // {
-  //   return "0x" + BitConverter.ToString(byteArray).Replace("-", string.Empty).ToLower();
-  // }
 
 }
 

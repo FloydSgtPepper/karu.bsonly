@@ -2,36 +2,63 @@ using System;
 
 namespace karu.bsonly.Serialization.Interface
 {
+
   public interface IDocumentDeserializer
   {
-    public bool HasEntry(ReadOnlySpan<byte> key, byte type_id);
-
     public bool HasNextEntry();
 
-    public bool SkipEntry(ReadOnlySpan<byte> key);
-    public byte HasEntry(ReadOnlySpan<byte> key);
+    public bool HasEntry(ReadOnlySpan<byte> key_string, byte type_id);
+
+    public bool SkipEntry(ReadOnlySpan<byte> key_string);
+    public byte HasEntry(ReadOnlySpan<byte> key_string);
     public (ReadOnlyMemory<byte> key_string, byte type) NextEntry();
 
-    public IBaseDeserializer FirstEntry();
-
-    public void Finish();
-
-
-    public void ReadNull();
+    /// <summary>
+    /// returns the binary subtype.
+    /// If the current entry is not a binary document, then the result is undefined.
+    /// </summary>
+    /// <returns>binary subtype</returns>
+    public byte BinarySubType();
 
     public long ReadLong();
 
     public int ReadInt();
 
+    public bool ReadBool();
+
     public double ReadDouble();
 
-    public bool ReadBool();
+    public void ReadNull();
 
     public ReadOnlySpan<byte> ReadString();
 
-    public Guid ReadGuid(/* enum type */);
+    /// <summary>
+    /// Return the binary data.
+    /// The subtype is removed. It should be checked before with BinarySubType()
+    /// </summary>
+    /// <returns>binary data</returns>
+    public ReadOnlySpan<byte> ReadBinary();
 
-    void ReadDocument<T>(T value, DeserializationContext context) where T : ISerializable;
+    /// <summary>
+    /// return the binary data.
+    /// This includes the binary subtype as the first byte.
+    /// </summary>
+    /// <returns>binary data</returns>
+    public ReadOnlySpan<byte> ReadRawBinary();
+
+    public ReadOnlySpan<byte> ReadRawDocument();
+
+    public int ReadSize();
+
+    public IDocumentDeserializer DocumentReader();
+
+    public IArrayDeserializer ArrayReader();
+
+    public void Finish();
+
+    public DeserializationContext Context();
+
+    public BsonDocument Document();
   }
 }
 
