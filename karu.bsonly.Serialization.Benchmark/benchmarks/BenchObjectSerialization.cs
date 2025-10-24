@@ -61,19 +61,19 @@
 //     [Benchmark]
 //     public byte[] Serialize_Simple()
 //     {
-//       return ApiSerializer.Serialize(_tc_simple, _context);
+//       return BsonlySerializer.Serialize(_tc_simple, _context);
 //     }
 
 //     [Benchmark]
 //     public byte[] Serialize_ISerializable()
 //     {
-//       return ApiSerializer.Serialize(_tc_serializable, _context);
+//       return BsonlySerializer.Serialize(_tc_serializable, _context);
 //     }
 
 //     [Benchmark]
 //     public byte[] Serialize_Wrapper()
 //     {
-//       return ApiSerializer.Serialize(_tc_wrapper, _context);
+//       return BsonlySerializer.Serialize(_tc_wrapper, _context);
 //     }
 //   }
 // }

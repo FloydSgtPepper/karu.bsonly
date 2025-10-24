@@ -1,12 +1,23 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using karu.bsonly.Serialization.Interface;
 
-namespace karu.bsonly.Generator
+
+namespace karu.bsonly.Serialization.Extension;
+
+static public class GuidExtension
 {
-  [System.AttributeUsage(System.AttributeTargets.Field)]
-  public class ApiUtf8Attribute : System.Attribute
+  public static void Serialize(this Guid extendee, IDocumentSerializer serializer, ReadOnlySpan<byte> key)
   {
+    Serializer.Serialize(serializer, key, extendee);
+  }
 
+  public static void Deserialize(this Guid extendee, IDocumentDeserializer serializer, ReadOnlySpan<byte> key)
+  {
+    Serializer.Serialize(serializer, key, ref extendee);
   }
 }
+
 
 #region Copyright notice and license
 

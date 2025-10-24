@@ -2,8 +2,8 @@
 {
   public interface ISerializable
   {
-    void Serialize(IBaseSerializer serializer, SerializationContext context);
-    void Deserialize(IBaseDeserializer deserializer, DeserializationContext context);
+    void Serialize(IDocumentSerializer serializer);
+    void Deserialize(IDocumentDeserializer deserializer);
   }
 }
 

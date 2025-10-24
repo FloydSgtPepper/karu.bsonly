@@ -7,16 +7,24 @@ namespace karu.bsonly.Serialization;
 // does not really handle a stream but only a completed stream
 public class MemoryArrayReader : IArrayDeserializer
 {
-  private IBsonDocument _bson_doc;
+  private BsonDocument _bson_doc;
+
+  private DeserializationContext _context;
 
   /// <summary>
   /// create a reader to read sub document of array type
   /// </summary>
   /// <param name="bson_document">the bson document</param>
-  public MemoryArrayReader(IBsonDocument bson_document)
+  public MemoryArrayReader(BsonDocument bson_document, DeserializationContext context)
   {
     // FIXME: input BsonDoc instead of baseSerializer
     _bson_doc = bson_document;
+    _context = context;
+  }
+
+  public DeserializationContext Context()
+  {
+    return _context;
   }
 
   public bool HasEntry(ReadOnlySpan<byte> key, byte type_id)
@@ -29,12 +37,12 @@ public class MemoryArrayReader : IArrayDeserializer
     return _bson_doc.HasEntry(key);
   }
 
-  public IBaseDeserializer NextEntry()
+  public IDocumentDeserializer NextEntry()
   {
     var (key, type) = _bson_doc.NextEntry();
 
     // FIXME: test test test
-    return new MemoryReader(_bson_doc);
+    return new MemoryDocReader(_bson_doc, _context);
   }
 
   public byte NextEntryType()
@@ -54,10 +62,10 @@ public class MemoryArrayReader : IArrayDeserializer
     return _bson_doc.SkipEntry(key);
   }
 
-  public IBaseDeserializer FirstEntry()
+  public IDocumentDeserializer FirstEntry()
   {
     // FIXME: test test test
-    var base_reader = new MemoryReader(_bson_doc);
+    var base_reader = new MemoryDocReader(_bson_doc, _context);
     return base_reader;
   }
 
@@ -95,14 +103,9 @@ public class MemoryArrayReader : IArrayDeserializer
     return BasicReader.ReadString(_bson_doc);
   }
 
-  public Guid ReadGuid()
+  public ReadOnlySpan<byte> ReadBinary()
   {
-    return BasicReader.ReadGuid(_bson_doc);
-  }
-
-  public ReadOnlySpan<byte> ReadBinary(byte user_type)
-  {
-    return BasicReader.ReadBinary(_bson_doc, user_type);
+    return BasicReader.ReadBinary(_bson_doc);
   }
 
   public ReadOnlySpan<byte> ReadRawBinary()
@@ -115,12 +118,12 @@ public class MemoryArrayReader : IArrayDeserializer
     return BasicReader.ReadRawDocument(_bson_doc);
   }
 
-  public void ReadDocument<T>(T value, DeserializationContext context) where T : ISerializable
+  public void ReadDocument<T>(T value) where T : ISerializable
   {
-    var doc_serializer = new MemoryDocReader(_bson_doc);
+    // var doc_serializer = new MemoryDocReader(_bson_doc);
 
-    value.Deserialize(doc_serializer.FirstEntry(), context);
-    doc_serializer.Finish();
+    // value.Deserialize(doc_serializer.FirstEntry(), context);
+    // doc_serializer.Finish();
   }
 }
 

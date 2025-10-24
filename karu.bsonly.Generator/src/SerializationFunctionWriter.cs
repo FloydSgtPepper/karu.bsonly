@@ -31,22 +31,20 @@ namespace karu.bsonly.Generator
       BsonDocument = 9
     }
 
-    private static readonly string[] _WriteMethods = new string[]
-    {
+    private static readonly string[] _WriteMethods = {
       "WriteString",
       "WriteDouble",
       "WriteBool",
       "WriteInt",
       "WriteLong",
       "WriteGuid",
-      ".WriteNull",
+      "WriteNull",
       "WriteArray",
       "WriteBinary",
       "WriteDocument"
     };
 
-    private static readonly string[] _ReadMethods = new string[]
-    {
+    private static readonly string[] _ReadMethods = {
       "ReadString",
       "ReadDouble",
       "ReadBool",
@@ -59,8 +57,7 @@ namespace karu.bsonly.Generator
       "ReadDocument"
     };
 
-    private static readonly string[] _TypeByte = new string[]
-    {
+    private static readonly string[] _TypeByte = {
       "global::karu.bsonly.Serialization.Interface.BsonConstants.BSON_TYPE_UTF8",
       "global::karu.bsonly.Serialization.Interface.BsonConstants.BSON_TYPE_DOUBLE",
       "global::karu.bsonly.Serialization.Interface.BsonConstants.BSON_TYPE_BOOL",
@@ -146,7 +143,7 @@ namespace karu.bsonly.Generator
 
     static public void WriteSerializeToBson(Model model, System.CodeDom.Compiler.IndentedTextWriter source)
     {
-      source.WriteLine($"public void Serialize(global::karu.bsonly.Serialization.Interface.IBaseSerializer _generated_param_writer, global::karu.bsonly.Serialization.Interface.SerializationContext _generated_param_context)");
+      source.WriteLine($"public void Serialize(global::karu.bsonly.Serialization.Interface.IDocumentSerializer _generated_param_writer)");
       source.WriteLine("{");
       source.Indent++;
 
@@ -175,12 +172,12 @@ namespace karu.bsonly.Generator
             if (cast == "Utf8")
             {
               source.WriteLine($"var _generated_tmp_{count} = System.Text.Encoding.UTF8.GetBytes(this.{prop.Name});");
-              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8, _generated_tmp_{count});");
+              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8).{_WriteMethods[(int)bson_type]}( _generated_tmp_{count});");
               ++count;
             }
             else
             {
-              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8, this.{prop.Name});");
+              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8).{_WriteMethods[(int)bson_type]}(this.{prop.Name});");
             }
             break;
 
@@ -191,12 +188,12 @@ namespace karu.bsonly.Generator
           case BsonType.BsonGuid:
           case BsonType.BsonNull:
             if (cast == string.Empty)
-              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8, this.{prop.Name});");
+              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8).{_WriteMethods[(int)bson_type]}(this.{prop.Name});");
             else
-              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8, ({cast})this.{prop.Name});");
+              source.WriteLine($"_generated_param_writer.{_WriteMethods[(int)bson_type]}({prop.BsonName}u8).{_WriteMethods[(int)bson_type]}(({cast})this.{prop.Name});");
             break;
           case BsonType.BsonDocument:
-            source.WriteLine($"global::karu.bsonly.Serialization.Serializer.Serialize(_generated_param_writer, {prop.BsonName}u8,  this.{prop.Name});");
+            source.WriteLine($"global::karu.bsonly.Serialization.Serializer.Serialize(_generated_param_writer, {prop.BsonName}u8, this.{prop.Name}); // {prop.Type} {prop.BsonType}");
             break;
           case BsonType.BsonArray:
             break;
@@ -214,7 +211,7 @@ namespace karu.bsonly.Generator
     {
       int count = 0;
       source.WriteLine("");
-      source.WriteLine($"public void Deserialize(global::karu.bsonly.Serialization.Interface.IBaseDeserializer _generated_param_reader, global::karu.bsonly.Serialization.Interface.DeserializationContext _generated_param_context)");
+      source.WriteLine($"public void Deserialize(global::karu.bsonly.Serialization.Interface.IDocumentDeserializer _generated_param_reader)");
       source.WriteLine("{");
       source.Indent++;
 
@@ -298,10 +295,22 @@ namespace karu.bsonly.Generator
           case BsonType.BsonDocument:
             source.WriteLine($"if (_generated_param_reader.HasEntry({prop.BsonName}u8, {bson_type_byte}))");
             source.Indent++;
-            source.WriteLine($"global::karu.bsonly.Serialization.Serializer.Serialize(_generated_param_reader, {prop.BsonName}u8,  this.{prop.Name});");
+            source.WriteLine($"global::karu.bsonly.Serialization.Serializer.Serialize(_generated_param_reader, {prop.BsonName}u8, this.{prop.Name});");
             source.Indent--;
             break;
           case BsonType.BsonBinary:
+            if (prop.SerializationMethod != string.Empty)
+              if (!prop.SerializationMethod.Contains("."))
+                source.WriteLine($"global::karu.bsonly.Serialization.Serializer.{prop.SerializationMethod}(_generated_param_reader, {prop.BsonName}u8, out this.{prop.Name});");
+              else
+                source.WriteLine($"{prop.SerializationMethod}(_generated_param_reader, {prop.BsonName}u8, out this.{prop.Name});");
+            else
+            {
+              source.WriteLine($"if (_generated_param_reader.HasEntry({prop.BsonName}u8, {bson_type_byte}))");
+              source.Indent++;
+              source.WriteLine($"global::karu.bsonly.Serialization.Serializer.Serialize(_generated_param_reader, {prop.BsonName}u8, this.{prop.Name});");
+              source.Indent--;
+            }
             break;
           case BsonType.BsonArray:
             break;
@@ -317,7 +326,6 @@ namespace karu.bsonly.Generator
       var bson_type = (SerializationFunctionWriter.BsonType.BsonDocument, string.Empty);
       bson_type = type_string switch
       {
-        "string" => (SerializationFunctionWriter.BsonType.BsonUtf8, "Utf8"),
         "float" => (SerializationFunctionWriter.BsonType.BsonDouble, "double"),
         "double" => (SerializationFunctionWriter.BsonType.BsonDouble, string.Empty),
         "bool" => (SerializationFunctionWriter.BsonType.BsonBool, string.Empty),
@@ -331,7 +339,15 @@ namespace karu.bsonly.Generator
         "ushort" => (SerializationFunctionWriter.BsonType.BsonInt32, "int"),
         "uint" => (SerializationFunctionWriter.BsonType.BsonInt32, "int"),
         "ulong" => (SerializationFunctionWriter.BsonType.BsonInt64, "long"),
+        "string" => (SerializationFunctionWriter.BsonType.BsonUtf8, "Utf8"),
         "Guid" => (SerializationFunctionWriter.BsonType.BsonGuid, string.Empty),
+        "byte[]" => (SerializationFunctionWriter.BsonType.BsonBinary, string.Empty),
+        "binary" => (SerializationFunctionWriter.BsonType.BsonBinary, string.Empty),
+        // FIXME: proper handling of nullability needed
+        "string?" => (SerializationFunctionWriter.BsonType.BsonUtf8, "Utf8"),
+        "Guid?" => (SerializationFunctionWriter.BsonType.BsonGuid, string.Empty),
+        "byte[]?" => (SerializationFunctionWriter.BsonType.BsonBinary, string.Empty),
+
         _ => (SerializationFunctionWriter.BsonType.BsonDocument, string.Empty),
       };
 
@@ -340,17 +356,6 @@ namespace karu.bsonly.Generator
   }
 }
 
-// var sourceText = SourceText.From($$"""
-// namespace FooBar;
-// partial class Bar
-// {
-//     partial void Serialize()
-//     {
-//         // generated code
-//     }
-// }
-// """, Encoding.UTF8);
-// source.W(sourceText);
 
 #region Copyright notice and license
 

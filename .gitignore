@@ -7,3 +7,4 @@ build/
 *.csproj.user
 **/_generated_files/
 **/*.g.cs
+scripts/

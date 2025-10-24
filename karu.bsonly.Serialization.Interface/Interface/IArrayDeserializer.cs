@@ -16,7 +16,7 @@ namespace karu.bsonly.Serialization.Interface
 
     public void Finish();
 
-    public IBaseDeserializer NextEntry();
+    public IDocumentDeserializer NextEntry();
     public void ReadNull();
 
     public long ReadLong();
@@ -29,8 +29,7 @@ namespace karu.bsonly.Serialization.Interface
 
     public ReadOnlySpan<byte> ReadString();
 
-    public Guid ReadGuid(/* enum type */);
-
+    public DeserializationContext Context();
   }
 }
 

@@ -37,7 +37,7 @@ partial class WrapperClassInner : ISerializable
   }
 
   /* generated if not provided */
-  public void Deserialize(IBaseDeserializer reader, DeserializationContext context)
+  public void Deserialize(IDocumentDeserializer reader)
   {
     // Serializer.Serialize(reader, "StrProperty"u8, ref this.StrProperty);
     // Serializer.Serialize(reader, "LongProperty"u8, ref this.LongProperty);
@@ -45,7 +45,7 @@ partial class WrapperClassInner : ISerializable
   }
 
   /* generated if not provided */
-  public void Serialize(IBaseSerializer writer, SerializationContext context)
+  public void Serialize(IDocumentSerializer writer)
   {
     Serializer.Serialize(writer, "StrProperty"u8, this.StrProperty);
     Serializer.Serialize(writer, "LongProperty"u8, this.LongProperty);
@@ -56,13 +56,13 @@ partial class WrapperClassInner : ISerializable
 // generated in Serializer class
 public static class WrapperSerializer
 {
-  public static void Serialize(IBaseSerializer serializer, ReadOnlySpan<byte> key, WrappedClassInner value)
+  public static void Serialize(IDocumentSerializer serializer, ReadOnlySpan<byte> key, WrappedClassInner value)
   {
     // var wrapped_value = new WrapperClassInner(value);
     // Serializer.Serialize<WrapperClassInner>(serializer, key, wrapped_value);
   }
 
-  public static void Serialize(IBaseDeserializer deserializer, ReadOnlySpan<byte> key, WrappedClassInner value)
+  public static void Serialize(IDocumentDeserializer deserializer, ReadOnlySpan<byte> key, WrappedClassInner value)
   {
     // var wrapped_value = new WrapperClassInner(value);
     // Serializer.Serialize<WrapperClassInner>(deserializer, key, wrapped_value);

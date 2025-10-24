@@ -6,13 +6,13 @@ namespace karu.bsonly.Serialization;
 // does not really handle a stream but only a completed stream
 static class BasicReader
 {
-  public static void ReadNull(IBsonDocument doc)
+  public static void ReadNull(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     Debug.Assert(data.Length == 1 && data[0] == 0);
   }
 
-  public static long ReadLong(IBsonDocument doc)
+  public static long ReadLong(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     if (data.Length == sizeof(long))
@@ -21,7 +21,7 @@ static class BasicReader
     throw new BufferUnderrunException(); // FIXME: or type exception or InvalidDoc expection maybe??
   }
 
-  public static int ReadInt(IBsonDocument doc)
+  public static int ReadInt(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     if (data.Length == sizeof(int))
@@ -30,7 +30,7 @@ static class BasicReader
     throw new BufferUnderrunException(); // FIXME: or type exception or InvalidDoc expection maybe??
   }
 
-  public static double ReadDouble(IBsonDocument doc)
+  public static double ReadDouble(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     if (data.Length == sizeof(double))
@@ -39,7 +39,7 @@ static class BasicReader
     throw new BufferUnderrunException(); // FIXME: or type exception or InvalidDoc expection maybe??
   }
 
-  public static bool ReadBool(IBsonDocument doc)
+  public static bool ReadBool(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     if (data.Length == sizeof(bool))
@@ -48,52 +48,26 @@ static class BasicReader
     throw new BufferUnderrunException(); // FIXME: or type exception or InvalidDoc expection maybe??
   }
 
-  public static ReadOnlySpan<byte> ReadString(IBsonDocument doc)
+  public static ReadOnlySpan<byte> ReadString(BsonDocument doc)
   {
     return doc.CurrentElement();
   }
 
-  public static Guid ReadGuid(IBsonDocument doc)
-  {
-    var data = doc.CurrentElement();
-
-    if (data.Length == BsonConstants.SIZE_OF_GUID + 1 && data[0] == BsonConstants.BSON_BINARY_SUBTYPE_GUID)
-    {
-      // Standard Bson Guid representation
-      // Array.Reverse(value_as_array, 0, 4);
-      // Array.Reverse(value_as_array, 4, 2);
-      // Array.Reverse(value_as_array, 6, 2);
-      return new Guid(data.Slice(1)); // FIXME: need to test
-    }
-    return Guid.Empty;
-
-    // json
-    // }
-    // else
-    // {
-    //   var guid_as_string = ReadString(BsonConstants.SIZE_OF_GUID);
-    //   if (Guid.TryParseExact(guid_as_string, "D", out var guid_value))
-    //     return guid_value;
-    //   throw new TypeException("ReadOnlySpan<byte> could not be parsed as guid");
-    // }
-  }
-
-  public static ReadOnlySpan<byte> ReadBinary(IBsonDocument doc, byte user_type)
+  public static ReadOnlySpan<byte> ReadBinary(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     if (data.Length > 1)
-      if (user_type != data[0])
-        return Array.Empty<byte>();
+      return data.Slice(1);
 
-    return data.Slice(1);
+    return Array.Empty<byte>();
   }
 
-  public static ReadOnlySpan<byte> ReadRawBinary(IBsonDocument doc)
+  public static ReadOnlySpan<byte> ReadRawBinary(BsonDocument doc)
   {
     return doc.CurrentElement();
   }
 
-  public static ReadOnlySpan<byte> ReadRawDocument(IBsonDocument doc)
+  public static ReadOnlySpan<byte> ReadRawDocument(BsonDocument doc)
   {
     var data = doc.CurrentElement();
     return data.Slice(0, data.Length - 1); // remove trailing EOD

@@ -1,21 +1,23 @@
 using System;
 
-namespace karu.bsonly.Serialization;
-
-public class BufferUnderrunException : Exception
+namespace karu.bsonly.Serialization.Interface
 {
-  public BufferUnderrunException()
-  {
-  }
 
-  public BufferUnderrunException(string message)
-      : base(message)
+  public class BsonSerializationException : Exception
   {
-  }
+    public BsonSerializationException()
+    {
+    }
 
-  public BufferUnderrunException(string message, Exception inner)
-      : base(message, inner)
-  {
+    public BsonSerializationException(string message)
+        : base(message)
+    {
+    }
+
+    public BsonSerializationException(string message, Exception inner)
+        : base(message, inner)
+    {
+    }
   }
 }
 

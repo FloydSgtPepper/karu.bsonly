@@ -2,7 +2,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using karu.bsonly.Serialization;
 using karu.bsonly.Serialization.Interface;
-using karu.bsonly.Serialization.Test.Utils;
+using karu.hexutil;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Collections.ObjectModel;
@@ -23,7 +23,7 @@ public class TestBsonValueDocument
   public void InitializationTest()
   {
     var bson_str = "02 726573756c7400 56000000 50726f6a65637453746f726167655773536572766963652076657273696f6e3a20323032372d52312e3020436f6d6d69743a203362633137333631623464634275696c6420446174653a20323032352d30392d313100".Replace(" ", "");
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
 
 
     // just testing that no excpetion is thrown, i.e. bson_doc is a valid bson document

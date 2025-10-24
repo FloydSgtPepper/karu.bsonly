@@ -14,14 +14,14 @@ class WrappedClass : ISerializable
 
   public int IntProperty = 0;
 
-  public void Deserialize(IBaseDeserializer reader, DeserializationContext context)
+  public void Deserialize(IDocumentDeserializer reader)
   {
     // Serializer.Serialize(reader, "LongProperty"u8, ref this.LongProperty);
     // Serializer.Serialize(reader, "InnerClass"u8, this.InnerClass);
     // Serializer.Serialize(reader, "IntProperty"u8, ref this.IntProperty);
   }
 
-  public void Serialize(IBaseSerializer writer, SerializationContext context)
+  public void Serialize(IDocumentSerializer writer)
   {
     Serializer.Serialize(writer, "LongProperty"u8, this.LongProperty);
     // Serializer.Serialize(writer, "InnerClass"u8, this.InnerClass, context);

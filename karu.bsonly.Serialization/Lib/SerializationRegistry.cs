@@ -27,6 +27,17 @@ public class SerializationRegistry : ISerializationFunctionRegistry
     return null;
   }
 
+  public static SerializationRegistry DefaultInitialization()
+  {
+    var registry = new SerializationRegistry();
+
+    registry.Register(typeof(List<ulong>), new Provider.SerializationOfListOfULong());
+    registry.Register(typeof(List<long>), new Provider.SerializationOfListOfLong());
+    registry.Register(typeof(List<uint>), new Provider.SerializationOfListOfUInt());
+    registry.Register(typeof(List<int>), new Provider.SerializationOfListOfInt());
+
+    return registry;
+  }
 }
 
 

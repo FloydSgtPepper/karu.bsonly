@@ -1,7 +1,7 @@
 == karu.bsonly ==
 
 This is a toy project of mine. I wanted to learn how to write a C# source generator. To test and use the
-source generator I created a serialization library which encodes / decodes (simplified) bson documents.
+source generator I created a serialization library which encodes / decodes (simplified / similar to) bson documents.
 
 While writing the serialization library I decided to additionally learn about C# API design, especially using C# generics and what the limitations compared to C++ templates are.
 
@@ -16,8 +16,4 @@ Currently I do not accept contributions. Mainly because I am unsure about licens
 == License ==
 
 [**Apache License 2.0**](https://github.com/FloydSgtPepper/karu.bsonly/blob/main/LICENSE).
-
-
-
-
 

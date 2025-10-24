@@ -1,234 +1,132 @@
 using System.Diagnostics;
+using System.Reflection.Metadata;
 using karu.bsonly.Serialization.Interface;
 
 namespace karu.bsonly.Serialization;
 
 public class StreamDocWriter : IDocumentSerializer
 {
-  private readonly int _max_document_size;
+  private BsonDocumentStream _bson_doc;
 
-  private Stream _stream;
+  private StreamBasicWriter _base_writer;
 
-  private readonly long _start_position;
+  private readonly SerializationContext _context;
 
-  public StreamDocWriter(int max_doc_size)
+  public StreamDocWriter(SerializationContext context)
   {
-    _max_document_size = max_doc_size;
-    _stream = new MemoryStream();
+    _context = context;
+    var stream = new MemoryStream();
+    _bson_doc = new BsonDocumentStream(stream);
 
-    _start_position = _stream.Position;
-    WriteSize(0); // dummy write
+
+    _base_writer = new StreamBasicWriter(stream);
+
+    _bson_doc.StartDoc(); // dummy write
   }
 
-  public StreamDocWriter(Stream stream, int max_doc_size)
+  public StreamDocWriter(Stream stream, SerializationContext context)
   {
-    // FIXME: instead of value_writer parameter have a IBaseSerializer and IDocSerializer
-    //  IArraySerializer -> has IBaseSerializer (member) to write data
-    // IDocSerializer -> has IBaseSerializer (member) to write data 
-
-    _max_document_size = max_doc_size;
-    _stream = stream;
-
-    _start_position = _stream.Position;
-
-    WriteSize(0); // dummy write
+    _context = context;
+    _bson_doc = new BsonDocumentStream(stream);
+    _base_writer = new StreamBasicWriter(stream);
+    _bson_doc.StartDoc(); // dummy write
   }
 
-  public void Write(ReadOnlySpan<byte> key_string, long value)
+  public void FinishSubDocument()
   {
-    WriteTypeId(BsonConstants.BSON_TYPE_INT64);
-    WriteString(key_string);
-    var buffer = BitConverter.GetBytes(value);
-    _stream.Write(buffer);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, int value)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_INT32);
-    WriteString(key_string);
-    var buffer = BitConverter.GetBytes(value);
-    _stream.Write(buffer);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, double value)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_DOUBLE);
-    WriteString(key_string);
-    var buffer = BitConverter.GetBytes(value);
-    _stream.Write(buffer);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, bool value)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_BOOL);
-    WriteString(key_string);
-    if (value)
-      _stream.WriteByte(1);
-    else
-      _stream.WriteByte(0);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_NULL);
-    WriteString(key_string);
-    _stream.WriteByte(0);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> value)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_UTF8);
-    WriteString(key_string);
-
-    WriteSize(value.Length + 1);
-    _stream.Write(value);
-    _stream.WriteByte(0);
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, Guid value)
-  {
-    // if (_settings.Sequences == Sequences.BINARY)
-    // {
-    var value_as_array = value.ToByteArray();
-    Debug.Assert(BsonConstants.SIZE_OF_GUID == value_as_array.Length);
-
-    // Standard Bson Guid representation
-    Array.Reverse(value_as_array, 0, 4);
-    Array.Reverse(value_as_array, 4, 2);
-    Array.Reverse(value_as_array, 6, 2);
-
-    Write(key_string, value_as_array.AsSpan(), BsonConstants.BSON_BINARY_SUBTYPE_GUID);
-
-    // json
-    // }
-    // else
-    // {
-    //   var value_as_string = value.ToString();
-    //   WriteString(key, value_as_string);
-    // }
-  }
-
-  public void Write(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> binary_data, byte binary_subtype)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_BINARY);
-    WriteString(key_string);
-    var start_position = _stream.Position;
-    WriteSize(0); // dummy size
-    WriteTypeId(binary_subtype);
-    _stream.Write(binary_data);
-    WriteSizeAt(start_position);
-  }
-
-  public void WriteDocument<T>(ReadOnlySpan<byte> key_string, T document) where T : ISerializable
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_DOCUMENT);
-    WriteString(key_string);
-    var pos = _stream.Position;
-    WriteSize(0);
-    //document.Serialize(this, new SerializationContext());
-    FinishDocument(pos);
-  }
-
-  public void WriteRawDocument(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> document)
-  {
-    WriteTypeId(BsonConstants.BSON_TYPE_DOCUMENT);
-    WriteString(key_string);
-    WriteSize(document.Length);
-    _stream.Write(document);
-    WriteEod();
-  }
-
-  private void WriteTypeId(byte type_id)
-  {
-    _stream.WriteByte(type_id);
-  }
-  private void WriteEod()
-  {
-    _stream.WriteByte(BsonConstants.BSON_TYPE_EOD);
-  }
-
-  private void WriteString(ReadOnlySpan<byte> str)
-  {
-    _stream.Write(str);
-    _stream.WriteByte(0);
-  }
-
-  private void WriteSize(int size)
-  {
-    var size_bytes = BitConverter.GetBytes(size);
-    _stream.Write(size_bytes);
-  }
-
-  private void WriteSizeAt(long start_position)
-  {
-    var size = _stream.Position - start_position - 1 - sizeof(int);
-    if (size < _max_document_size)
-    {
-      _stream.Seek(start_position, SeekOrigin.Begin);
-      WriteSize((int)size);
-      _stream.Seek(0, SeekOrigin.End);
-      return;
-    }
-
-    throw new ArgumentException("the bson document is too big");
-  }
-
-  private void FinishDocument(long start_position)
-  {
-    WriteEod();
-
-    var size = _stream.Position - start_position;
-    if (size < _max_document_size)
-    {
-      _stream.Seek(start_position, SeekOrigin.Begin);
-      WriteSize((int)size);
-      _stream.Seek(0, SeekOrigin.End);
-      return;
-    }
-
-    throw new ArgumentException("the bson document is too big");
+    _bson_doc.WriteSubDocSizeAndEod();
+    _bson_doc = _bson_doc.ParentDocument()!;
   }
 
   public byte[] Finish()
   {
-    WriteEod();
-    var size = _stream.Position - _start_position;
+    _bson_doc.WriteDocSizeAndEod();
 
-    if (size < _max_document_size)
+    var bytes = Array.Empty<byte>();
+    if (_bson_doc.Stream() is MemoryStream memory_stream)
     {
-      _stream.Seek(_start_position, SeekOrigin.Begin);
-      WriteSize((int)size);
-      _stream.Seek(_start_position, SeekOrigin.Begin);
-
-      var bytes = Array.Empty<byte>();
-      if (_stream is MemoryStream memory_stream)
+      bytes = memory_stream.ToArray();
+    }
+    else
+    {
+      using (var mem_stream = new MemoryStream())
       {
-        bytes = memory_stream.ToArray();
+        _bson_doc.Stream().CopyTo(mem_stream);
+        bytes = mem_stream.ToArray();
       }
-      else
-      {
-        using (var mem_stream = new MemoryStream())
-        {
-          _stream.CopyTo(mem_stream);
-          bytes = mem_stream.ToArray();
-        }
-      }
-
-      _stream.Seek(0, SeekOrigin.End);
-      return bytes;
     }
 
-    throw new ArgumentException("the bson document is too big");
+    _bson_doc.Stream().Seek(0, SeekOrigin.End);
+    return bytes;
   }
 
-  public IArraySerializer SerializeArray(ReadOnlySpan<byte> key_string)
+  public SerializationContext Context()
   {
-    WriteTypeId(BsonConstants.BSON_TYPE_ARRAY);
-    WriteString(key_string);
+    return _context;
+  }
 
-    return new StreamArrayWriter(_stream, _max_document_size);
+  private IBaseSerializer Write(ReadOnlySpan<byte> key, byte type)
+  {
+    _base_writer.WriteKeyAndType(key, type);
+    return _base_writer;
+  }
+
+  public IBaseSerializer WriteLong(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_INT64);
+  }
+  public IBaseSerializer WriteInt(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_INT32);
+  }
+
+  public IBaseSerializer WriteDouble(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_DOUBLE);
+  }
+
+  public IBaseSerializer WriteString(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_UTF8);
+  }
+
+  public IBaseSerializer WriteBool(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_BOOL);
+  }
+
+  public IBaseSerializer WriteNull(ReadOnlySpan<byte> key)
+  {
+    return Write(key, BsonConstants.BSON_TYPE_NULL);
+  }
+
+  public IDocumentSerializer WriteDocument(ReadOnlySpan<byte> key)
+  {
+    _base_writer.WriteKeyAndType(key, BsonConstants.BSON_TYPE_DOCUMENT);
+    var sub_doc = _bson_doc.SubDocument();
+    _bson_doc = sub_doc;
+    _bson_doc.StartDoc();
+    return this;
+  }
+
+  public IBaseSerializer WriteBinary(ReadOnlySpan<byte> key)
+  {
+    // _base_writer.WriteKeyAndType(key, BsonConstants.BSON_TYPE_BINARY);
+    // var sub_doc = _bson_doc.SubDocument();
+    // _bson_doc = sub_doc;
+    // _bson_doc.StartDoc();
+    return Write(key, BsonConstants.BSON_TYPE_BINARY);
+  }
+
+
+
+  public IArraySerializer WriteArray(ReadOnlySpan<byte> key)
+  {
+    _base_writer.WriteKeyAndType(key, BsonConstants.BSON_TYPE_ARRAY);
+    return new StreamArrayWriter(_bson_doc, _context.Configuration.Arrays == Arrays.EMPTY_KEYS);
   }
 }
+
 
 #region Copyright notice and license
 

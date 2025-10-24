@@ -4,7 +4,7 @@
 // namespace karu.bsonly.Serialization;
 
 // // does not really handle a stream but only a completed stream
-// public class JsonStreamReader : IBaseDeserializer
+// public class JsonStreamReader : IDocumentDeserializer
 // {
 
 //   const long MIN_ENTRY_SIZE = 5; //  type id, 2bytes index str, at least 1 byte data + EOD
@@ -301,14 +301,14 @@
 //   // public IBasicDeserializer ReadDocument()
 //   // {
 //   //   var size = ReadSize();
-//   //   var reader = new MemoryReader(_stream, _settings, is_doc: true); // also give the buffer?
+//   //   var reader = new MemoryDocReader(_stream, _settings, is_doc: true); // also give the buffer?
 //   //   return reader;
 //   // }
 
 //   public void ReadDocument(object value)
 //   {
 //     var size = ReadSize();
-//     var reader = new MemoryReader(_stream, _max_document_size, _out_of_order_evaluation, is_doc: true); // also give the buffer?
+//     var reader = new MemoryDocReader(_stream, _max_document_size, _out_of_order_evaluation, is_doc: true); // also give the buffer?
 //     ObjectSerialization.Deserialize(reader, value);
 //     ConsumeEndByte();
 //   }
@@ -316,7 +316,7 @@
 //   public void ReadDocument<T>(T value) where T : ISerializable
 //   {
 //     var size = ReadSize();
-//     var reader = new MemoryReader(_stream, _max_document_size, _out_of_order_evaluation, is_doc: true); // also give the buffer?
+//     var reader = new MemoryDocReader(_stream, _max_document_size, _out_of_order_evaluation, is_doc: true); // also give the buffer?
 //     value.Deserialize(reader, new DeserializationContext());
 //     ConsumeEndByte();
 //   }

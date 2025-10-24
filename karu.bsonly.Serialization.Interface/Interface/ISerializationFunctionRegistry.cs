@@ -5,8 +5,8 @@ namespace karu.bsonly.Serialization.Interface
 
   public interface ISerializationProvider
   {
-    public void SerializationFunction(IBaseSerializer serializer, ReadOnlySpan<byte> key, object value, Type type, SerializationContext context);
-    public void DeserializationFunction(IBaseDeserializer serializer, ref object? value, Type type, DeserializationContext context);
+    public void SerializationFunction(IDocumentSerializer serializer, ReadOnlySpan<byte> key, object value, Type type_of_value);
+    public void DeserializationFunction(IDocumentDeserializer serializer, ReadOnlySpan<byte> key, ref object? value, Type type_of_value);
   }
 
 

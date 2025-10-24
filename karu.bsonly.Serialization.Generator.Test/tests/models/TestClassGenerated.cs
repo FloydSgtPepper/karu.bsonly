@@ -4,7 +4,7 @@ using karu.bsonly.Generator;
 
 namespace karu.bsonly.Serialization.Test;
 
-[ApiGenerator]
+[BsonlyGenerator]
 partial class TestClassGenerated
 {
   public long LongProperty = 0;

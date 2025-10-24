@@ -20,8 +20,8 @@
 //     private readonly SerializationContext _serialization_context;
 //     private readonly DeserializationContext _deserialization_context;
 
-//     private readonly karu.bsonly.Serialization.MemoryReader _memory_reader;
-//     private readonly karu.bsonly.Serialization.MemoryReader _stream_reader;
+//     private readonly karu.bsonly.Serialization.MemoryDocReader _memory_reader;
+//     private readonly karu.bsonly.Serialization.MemoryDocReader _stream_reader;
 
 //     public BenchSerializer()
 //     {
@@ -48,20 +48,20 @@
 //       var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
 //       _tc_deserializable = new();
 
-//       _memory_reader = new MemoryReader(bson_doc, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
+//       _memory_reader = new MemoryDocReader(bson_doc, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
 
 //       var stream = new MemoryStream(bson_doc);
-//       _stream_reader = new MemoryReader(stream, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
+//       _stream_reader = new MemoryDocReader(stream, BsonSettings.BSON_API.MaxSize, BsonSettings.BSON_API.OutOfOrderEvaluation);
 //     }
 
 //     [Benchmark]
 //     public byte[] Serialize_StreamWriter()
 //     {
-//       return ApiSerializer.Serialize(_tc_serializable, _serialization_context);
+//       return BsonlySerializer.Serialize(_tc_serializable, _serialization_context);
 //     }
 
 //     [Benchmark]
-//     public void Serialize_MemoryReader()
+//     public void Serialize_MemoryDocReader()
 //     {
 //       Deserialize(_memory_reader, _deserialization_context, _tc_deserializable);
 //     }

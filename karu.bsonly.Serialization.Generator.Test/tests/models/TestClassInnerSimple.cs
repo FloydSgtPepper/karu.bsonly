@@ -12,14 +12,14 @@ class TestClassInnerSimple
   public int IntProperty = 0;
 
 
-  public void Deserialize(IBaseDeserializer reader, DeserializationContext context)
+  public void Deserialize(IDocumentDeserializer reader)
   {
     Serializer.Serialize(reader, "StrProperty"u8, ref StrProperty);
     Serializer.Serialize(reader, "LongProperty"u8, ref LongProperty);
     Serializer.Serialize(reader, "IntProperty"u8, ref IntProperty);
   }
 
-  public void Serialize(IBaseSerializer writer, SerializationContext context)
+  public void Serialize(IDocumentSerializer writer)
   {
     Serializer.Serialize(writer, "StrProperty"u8, StrProperty);
     Serializer.Serialize(writer, "LongProperty"u8, LongProperty);

@@ -9,19 +9,15 @@
     <GeneratedFolder>_generated</GeneratedFolder>
     <CompilerGeneratedFilesOutputPath>$(GeneratedFolder)\$(TargetFramework)</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
-  <!--<ItemGroup>
-    <Folder Include="_generated\" />
-  </ItemGroup> -->
-
-<ItemGroup>
-    <!-- 👇 Exclude everything in the base folder -->
-    <Compile Remove="$(GeneratedFolder)/**/*.cs" />
-</ItemGroup>
-
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="MSTest" Version="4.0.0-preview.25465.3" />
+    <!-- 👇 Exclude everything in the base folder -->
+    <Compile Remove="$(GeneratedFolder)/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.*" />
+    <PackageReference Include="MSTest" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>

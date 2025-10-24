@@ -1,30 +1,13 @@
+
+using System;
+
 namespace karu.bsonly.Generator
 {
-  class AttrProperty
+  [System.AttributeUsage(System.AttributeTargets.Class)]
+  public class BsonlyGeneratorAttribute : System.Attribute
   {
-    // public string Debug = "";
-
-    public string BsonName;
-    public string BsonType;
-    public int Order;
-
-    public AttrProperty(string name, string type, int order)
-    {
-      BsonName = name;
-      BsonType = type;
-      Order = order;
-    }
-    public AttrProperty()
-    {
-      BsonName = string.Empty;
-      BsonType = string.Empty;
-      Order = Property.DEAULT_ORDER_VALUE;
-      ;
-    }
   }
 }
-
-
 
 #region Copyright notice and license
 

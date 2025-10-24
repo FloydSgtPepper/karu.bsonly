@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace karu.bsonly.Generator
 {

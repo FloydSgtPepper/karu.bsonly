@@ -22,6 +22,7 @@ namespace karu.bsonly.Serialization.Interface
     // binary subtypes
     public const byte BSON_BINARY_SUBTYPE_BINARY = 0x00;
     public const byte BSON_BINARY_SUBTYPE_GUID = 0x04;
+    public const byte BSON_BINARY_SUBTYPE_GUID_CSHARP_LEGACY = 0x03;
 
     // user types
     public const byte BSON_USER_TYPE_SEQ_UINT_8 = 0x80;

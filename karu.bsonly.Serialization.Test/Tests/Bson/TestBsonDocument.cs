@@ -2,7 +2,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using karu.bsonly.Serialization;
 using karu.bsonly.Serialization.Interface;
-using karu.bsonly.Serialization.Test.Utils;
+using karu.hexutil;
 using System.Text.RegularExpressions;
 using System.Text;
 
@@ -21,7 +21,7 @@ public class TestBsonDocument
   public void InitializationTest()
   {
     var bson_str = "0x12000000 02 62617200 04000000 666f6f00 00".Replace(" ", "");
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
 
 
     var document = new BsonDocument(bson_doc, BsonSettings.BSON_API.OutOfOrderEvaluation);
@@ -32,7 +32,7 @@ public class TestBsonDocument
   public void CatchTooSmallDocumentSize()
   {
     var bson_str = "0x10000000 02 62617200 04000000 666f6f00 00".Replace(" ", "");
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
     // wrong doc size - must throw exception
     Assert.ThrowsExactly<ArgumentException>(() => new BsonDocument(bson_doc, BsonSettings.BSON_API.OutOfOrderEvaluation));
   }
@@ -42,8 +42,8 @@ public class TestBsonDocument
   {
     // minimal size - empty doc
     var bson_str = "0x05000000 00".Replace(" ", "");
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
-    var serializer = new MemoryReader(bson_doc, 64 * 1024 * 1024, false);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
+    var serializer = new MemoryDocReader(bson_doc, DeserializationContext.Default);
     Assert.IsFalse(serializer.HasNextEntry());
   }
 
@@ -51,7 +51,7 @@ public class TestBsonDocument
   public void CatchDocumentTooSmall()
   {
     var bson_str = "0x04000000";
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
     // doc too small -- must throw
     Assert.ThrowsExactly<ArgumentException>(() => new BsonDocument(bson_doc, out_of_order_evaluation: false));
   }
@@ -79,7 +79,7 @@ public class TestBsonDocument
                                        10 496e7450726f706572747900 ffffffff
                                       00", "\\s+", "");
 
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
     var document = new BsonDocument(bson_doc, out_of_order_evaluation: false);
 
     Assert.IsTrue(document.HasEntry("LongProperty"u8, BsonConstants.BSON_TYPE_INT64));
@@ -125,7 +125,7 @@ public class TestBsonDocument
                                        10 496e7450726f706572747900 ffffffff
                                       00", "\\s+", "");
 
-    var bson_doc = Utils.HexConverter.HexStringToByteArray(bson_str);
+    var bson_doc = HexConverter.HexStringToByteArray(bson_str);
     var document = new BsonDocument(bson_doc, out_of_order_evaluation: true);
 
     Assert.IsTrue(document.HasEntry("LongProperty"u8, BsonConstants.BSON_TYPE_INT64));

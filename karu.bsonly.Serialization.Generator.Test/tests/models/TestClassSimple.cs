@@ -13,20 +13,20 @@ class TestClassSimple
   public int IntProperty = 0;
 
 
-  public void Deserialize(IBaseDeserializer reader, DeserializationContext context)
+  public void Deserialize(IDocumentDeserializer reader)
   {
     Serializer.Serialize(reader, "LongProperty"u8, ref LongProperty);
     object? object_value = null;
-    Serializer.Serialize(reader, "InnerClass"u8, ref object_value, InnerClass.GetType(), context);
+    Serializer.Serialize(reader, "InnerClass"u8, ref object_value, InnerClass.GetType());
     if (object_value != null)
       InnerClass = object_value as TestClassInnerSimple ?? InnerClass;
     Serializer.Serialize(reader, "IntProperty"u8, ref IntProperty);
   }
 
-  public void Serialize(IBaseSerializer writer, SerializationContext context)
+  public void Serialize(IDocumentSerializer writer)
   {
     Serializer.Serialize(writer, "LongProperty"u8, LongProperty);
-    Serializer.Serialize(writer, "InnerClass"u8, InnerClass, context);
+    Serializer.Serialize(writer, "InnerClass"u8, InnerClass);
     Serializer.Serialize(writer, "IntProperty"u8, IntProperty);
   }
 }

@@ -4,11 +4,6 @@ using System;
 namespace karu.bsonly.Generator
 {
   [System.AttributeUsage(System.AttributeTargets.Class)]
-  public class ApiGeneratorAttribute : System.Attribute
-  {
-  }
-
-  [System.AttributeUsage(System.AttributeTargets.Class)]
   public class WrapAttribute : System.Attribute
   {
     public string Name { get; }
@@ -48,7 +43,6 @@ namespace karu.bsonly.Generator
       Type = string.Empty;
       Order = order;
     }
-
   }
 
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
@@ -63,11 +57,11 @@ namespace karu.bsonly.Generator
   }
 
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-  public class ApiTypeAttribute : System.Attribute
+  public class BsonlyTypeAttribute : System.Attribute
   {
     public string Type { get; set; } = string.Empty;
 
-    public ApiTypeAttribute(string type)
+    public BsonlyTypeAttribute(string type)
     {
       Type = type;
     }

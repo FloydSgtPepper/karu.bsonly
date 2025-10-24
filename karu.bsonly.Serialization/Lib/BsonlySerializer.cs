@@ -5,15 +5,15 @@ using karu.bsonly.Serialization.Interface;
 
 namespace karu.bsonly.Serialization;
 
-static public class ApiSerializer
+static public class BsonlySerializer
 {
   public static byte[] Serialize<T>(T value, SerializationContext context) where T : ISerializable
   {
-    StreamWriter writer = new StreamWriter(BsonSettings.BSON_API.MaxSize);
-
+    var writer = new StreamDocWriter(context);
+    Console.WriteLine($"guid type: {context.Configuration.GuidRepresentation}");
     try
     {
-      value.Serialize(writer, context);
+      value.Serialize(writer);
       return writer.Finish();
     }
     catch (Exception ex)
@@ -22,11 +22,11 @@ static public class ApiSerializer
     }
   }
 
-  public static byte[] Serialize<T>(T value, SerializationContext context, IBaseSerializer writer) where T : ISerializable
+  public static byte[] Serialize<T>(T value, IDocumentSerializer writer) where T : ISerializable
   {
     try
     {
-      value.Serialize(writer, context);
+      value.Serialize(writer);
       return writer.Finish();
     }
     catch (Exception ex)
@@ -37,13 +37,12 @@ static public class ApiSerializer
 
   public static T Deserialize<T>(byte[] bson_doc, DeserializationContext context) where T : ISerializable, new()
   {
-    var reader = new MemoryDocReader(bson_doc, BsonSettings.BSON_API.OutOfOrderEvaluation);
+    var reader = new MemoryDocReader(bson_doc, context);
 
     try
     {
       var value = new T();
-      value.Deserialize(reader.FirstEntry(), context);
-      reader.Finish();
+      value.Deserialize(reader);
       return value;
     }
     catch (Exception ex)
@@ -54,15 +53,15 @@ static public class ApiSerializer
 
   public static byte[] Serialize(object obj, SerializationContext context)
   {
-    StreamWriter writer = new StreamWriter(BsonSettings.BSON_API.MaxSize);
+    var writer = new StreamDocWriter(context);
     // member function
-    var parameter_types = new Type[] { typeof(IBaseSerializer), typeof(SerializationContext) };
+    var parameter_types = new Type[] { typeof(IDocumentSerializer) };
     var method_deserialize = obj.GetType().GetMethod("Serialize", BindingFlags.Instance | BindingFlags.Public, parameter_types);
     if (method_deserialize != null)
     {
       try
       {
-        var parameters = new object[] { writer, context };
+        var parameters = new object[] { writer };
         method_deserialize.Invoke(obj, parameters);
         return writer.Finish();
       }
@@ -78,19 +77,21 @@ static public class ApiSerializer
 
   public static void Deserialize(byte[] bson_doc, object value, DeserializationContext context)
   {
-    var reader = new MemoryDocReader(bson_doc, context.Configuration.OutOfOrderEvaluation);
     // member function
-    var parameter_types = new Type[] { typeof(IBaseDeserializer), typeof(DeserializationContext) };
+    var parameter_types = new Type[] { typeof(IDocumentDeserializer), typeof(DeserializationContext) };
     var method_deserialize = value.GetType().GetMethod("Deserialize", BindingFlags.Instance | BindingFlags.Public, parameter_types);
     if (method_deserialize != null)
     {
       try
       {
-        var parameters = new object[] { reader.FirstEntry(), context };
-        method_deserialize.Invoke(value, parameters);
-        reader.Finish();
-        // TODO: Dispose the reader
-        return;
+        using (var reader = new MemoryDocReader(bson_doc, context))
+        {
+          var parameters = new object[] { reader, context };
+          method_deserialize.Invoke(value, parameters);
+          reader.Finish();
+          // TODO: Dispose the reader
+          return;
+        }
       }
       catch (Exception ex)
       {
@@ -103,14 +104,14 @@ static public class ApiSerializer
 
   public static void Deserialize<T>(byte[] bson_doc, T value, DeserializationContext context) where T : ISerializable
   {
-    var reader = new MemoryDocReader(bson_doc, context.Configuration.OutOfOrderEvaluation);
-    value.Deserialize(reader.FirstEntry(), context);
+    using var reader = new MemoryDocReader(bson_doc, context);
+
+    value.Deserialize(reader);
     reader.Finish();
   }
 
   public static object? Deserialize(byte[] bson_doc, Type object_type, DeserializationContext context)
   {
-    var reader = new MemoryDocReader(bson_doc, BsonSettings.BSON_API.OutOfOrderEvaluation);
 
     object? instance = null;
     var ctor_info = object_type.GetConstructor(BindingFlags.Instance | BindingFlags.Public, null, Type.EmptyTypes, null);
@@ -121,17 +122,20 @@ static public class ApiSerializer
       throw new ArgumentException($"failed to create instance of type {object_type}");
 
     // member function
-    var parameter_types = new Type[] { typeof(IBaseDeserializer), typeof(DeserializationContext) };
+    var parameter_types = new Type[] { typeof(IDocumentDeserializer), typeof(DeserializationContext) };
     var method_deserialize = object_type.GetMethod("Deserialize", BindingFlags.Instance | BindingFlags.Public, parameter_types);
     if (method_deserialize != null)
     {
       try
       {
-        var parameters = new object[] { reader.FirstEntry(), context };
-        method_deserialize.Invoke(instance, parameters);
-        reader.Finish();
-        // TODO: Dispose the reader
-        return instance;
+        using (var reader = new MemoryDocReader(bson_doc, context))
+        {
+          var parameters = new object[] { reader, context };
+          method_deserialize.Invoke(instance, parameters);
+          reader.Finish();
+          // TODO: Dispose the reader
+          return instance;
+        }
       }
       catch (Exception ex)
       {
@@ -146,9 +150,12 @@ static public class ApiSerializer
 
         if (serialization_provider != null)
         {
-          serialization_provider.DeserializationFunction(reader.FirstEntry(), ref instance, object_type, context);
-          reader.Finish();
-          return instance;
+          using (var reader = new MemoryDocReader(bson_doc, context))
+          {
+            serialization_provider.DeserializationFunction(reader, ""u8, ref instance, object_type); // FIXME: key!!!
+            reader.Finish();
+            return instance;
+          }
         }
       }
     }

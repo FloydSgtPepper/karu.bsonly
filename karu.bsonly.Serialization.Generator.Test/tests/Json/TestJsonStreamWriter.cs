@@ -25,7 +25,7 @@ public class TestJsonStreamWriter
     public bool BoolProperty = false;
     public double DoubleProperty = 0.0;
 
-    public void Serialize(IBaseSerializer writer, SerializationContext context)
+    public void Serialize(IDocumentSerializer writer)
     {
       Serializer.Serialize(writer, "StrProperty"u8, StrProperty);
       Serializer.Serialize(writer, "LongProperty"u8, LongProperty);
@@ -34,7 +34,7 @@ public class TestJsonStreamWriter
       Serializer.Serialize(writer, "DoubleProperty"u8, DoubleProperty);
     }
 
-    public void Deserialize(IBaseDeserializer reader, DeserializationContext context)
+    public void Deserialize(IDocumentDeserializer reader)
     {
       Serializer.Serialize(reader, "StrProperty"u8, ref StrProperty);
       Serializer.Serialize(reader, "LongProperty"u8, ref LongProperty);
@@ -59,7 +59,7 @@ public class TestJsonStreamWriter
     var tc = new TestClass { StrProperty = "this is a string", LongProperty = 24353, IntProperty = 42, BoolProperty = true, DoubleProperty = 3.14 };
 
     // var serializer = new JsonStreamWriter(64 * 1024 * 1024);
-    // var our_doc = ApiSerializer.Serialize(tc, context, serializer);
+    // var our_doc = BsonlySerializer.Serialize(tc, context, serializer);
     // Debug.WriteLine($"our   {HexConverter.ByteArrayToString(our_doc)}");
 
     // Assert.AreEqual(expected, HexConverter.ByteArrayToString(our_doc));
@@ -107,12 +107,11 @@ public class TestJsonStreamWriter
   [TestMethod]
   public void WriteGuid()
   {
-    const int max_size = 64 * 1024 * 1024;
     var expected_bson = Regex.Replace(@"0x21000000 05 546865496400 10000000 04 551957ca 08f4 4a15 9a9f bc6453b3c28d 00", "\\s+", "");
     var bson_doc = bsonly.Test.Utils.HexConverter.HexStringToByteArray(expected_bson);
 
-    var serializer = new Serialization.StreamWriter(max_size);
-    serializer.WriteGuid("TheId"u8, Guid.Parse("551957ca-08f4-4a15-9a9f-bc6453b3c28d"));
+    var serializer = new Serialization.StreamDocWriter(SerializationContext.Default);
+    // serializer.WriteGuid("TheId"u8, Guid.Parse("551957ca-08f4-4a15-9a9f-bc6453b3c28d"));
     var actual = serializer.Finish();
 
     Assert.AreEqual(expected_bson, bsonly.Test.Utils.HexConverter.ByteArrayToHexString(actual));

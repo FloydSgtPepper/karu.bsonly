@@ -4,31 +4,25 @@ namespace karu.bsonly.Serialization.Interface
 {
   public interface IBaseSerializer
   {
-    void WriteLong(ReadOnlySpan<byte> key_string, long value);
+    public void WriteEod();
 
-    void WriteInt(ReadOnlySpan<byte> key_string, int value);
+    public void WriteKeyAndType(ReadOnlySpan<byte> key, byte type_id);
 
-    void WriteDouble(ReadOnlySpan<byte> key_string, double value);
+    public void WriteLong(long value);
 
-    void WriteBool(ReadOnlySpan<byte> key_string, bool value);
+    public void WriteInt(int value);
+    public void WriteDouble(double value);
+    public void WriteBool(bool value);
 
-    void WriteNull(ReadOnlySpan<byte> key_string);
+    public void WriteNull();
 
-    void WriteString(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> value);
+    public void WriteString(string value);
 
-    void WriteGuid(ReadOnlySpan<byte> key_string, Guid value);
+    public void WriteString(ReadOnlySpan<byte> value);
 
-    void WriteBinary(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> binary_data, byte binary_subtype);
-    // void WriteRawBinary(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> binary);
+    public void WriteBinary(ReadOnlySpan<byte> binary_data, byte binary_subtype);
 
-    public void WriteDocument<T>(ReadOnlySpan<byte> key_string, T document) where T : ISerializable;
-
-    // write an already serialized document
-    public void WriteRawDocument(ReadOnlySpan<byte> key_string, ReadOnlySpan<byte> document);
-
-    public byte[] Finish();
-
-    public IArraySerializer SerializeArray(ReadOnlySpan<byte> key_string);
+    public void WriteRawDocument(ReadOnlySpan<byte> document);
   }
 }
 

@@ -11,16 +11,26 @@ namespace karu.bsonly.Generator
     public string BsonName { get; init; }
     public string BsonType { get; init; }
     public int Order { get; init; }
+    public string SerializationMethod { get; init; }
+    public byte BinaryType { get; init; }
+    public byte UserType { get; init; }
+
 
     // public string Debug { get; init; }
 
-    public Property(string type, string name, string bson_name, string bson_type, int order_or_ignore, string debug = "")
+    public Property(string type, string name, string bson_name, string bson_type, int order_or_ignore,
+        string serialization_method, byte binary_type = BsonlyBinaryDataAttribute.DefaultType, byte user_type = BsonlyBinaryDataAttribute.DefaultType,
+        string debug = "")
     {
       Type = type;
       Name = name;
       BsonName = bson_name;
       BsonType = bson_type;
       Order = order_or_ignore;
+      SerializationMethod = serialization_method;
+      BinaryType = binary_type;
+      UserType = user_type;
+
       // Debug = debug;
     }
   }

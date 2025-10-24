@@ -6,9 +6,10 @@ namespace karu.bsonly.Generator
     ApiIgnore = 0,
     ApiElement = 1,
     ApiOrder = 2,
-    ApiType = 3,
+    BsonlyType = 3,
     ApiName = 4,
-    ApiUtf8 = 5,
+    BsonlyUtf8 = 5,
+    BsonlyBinaryData = 6,
     NOT_SUPPORTED = 127
   };
 
@@ -26,8 +27,8 @@ namespace karu.bsonly.Generator
       if (name == "ApiOrder")
         return Attributes.ApiOrder;
 
-      if (name == "ApiType")
-        return Attributes.ApiType;
+      if (name == "BsonlyType")
+        return Attributes.BsonlyType;
 
       if (name == "ApiName")
         return Attributes.ApiName;
@@ -35,25 +36,17 @@ namespace karu.bsonly.Generator
       if (name == "ApiElement")
         return Attributes.ApiElement;
 
-      if (name == "ApiUtf8")
-        return Attributes.ApiUtf8;
+      if (name == "BsonlyUtf8")
+        return Attributes.BsonlyUtf8;
+
+      if (name == "BsonlyBinaryData")
+        return Attributes.BsonlyBinaryData;
 
       return Attributes.NOT_SUPPORTED;
     }
   }
 }
 
-// var sourceText = SourceText.From($$"""
-// namespace FooBar;
-// partial class Bar
-// {
-//     partial void Serialize()
-//     {
-//         // generated code
-//     }
-// }
-// """, Encoding.UTF8);
-// source.W(sourceText);
 
 #region Copyright notice and license
 
